@@ -1,0 +1,20 @@
+{
+  "entity.economy_core.trader": "Торговец",
+  "item.economy_core.trader_spawn_egg": "Яйцо призыва торговца",
+  "message.economy_core.trader.no_village": "Торговец не нашёл кровать поблизости",
+  "message.economy_core.trader.no_offers": "В деревне пока нечем торговать",
+
+  "gui.economy_core.trader.buy": "Купить",
+  "gui.economy_core.trader.sell": "Продать",
+  "gui.economy_core.trader.empty_buy": "В деревне пока нет торгов",
+  "gui.economy_core.trader.sell_hint": "ЛКМ - продать партию, Shift+ЛКМ - продать всё",
+  "gui.economy_core.trader.sold_out": "Распродано",
+  "gui.economy_core.trader.have": "У вас: %s",
+
+  "message.economy_core.deposit": "На счёт внесено: %s",
+  "message.economy_core.withdraw": "Снято со счёта: %s",
+  "message.economy_core.empty": "На счёте нет изумрудов",
+
+  "message.economy_core.to_account": "Нет места, на счёт зачислено: %s",
+  "message.economy_core.no_room": "В инвентаре нет места"
+}
