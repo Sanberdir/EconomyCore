@@ -16,5 +16,6 @@
   "message.economy_core.empty": "No emeralds in the account",
 
   "message.economy_core.to_account": "No room in inventory, deposited to account: %s",
-  "message.economy_core.no_room": "No room in inventory"
+  "message.economy_core.no_room": "No room in inventory",
+
 }
