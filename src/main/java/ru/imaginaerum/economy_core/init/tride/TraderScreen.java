@@ -4,6 +4,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
@@ -25,7 +26,10 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
     private static final int LIST_W = 252;
     private static final int SOLD_OUT_X = 84;
     private static final ItemStack EMERALD = new ItemStack(Items.EMERALD);
-
+    private List<TraderPrices.SellLine> sellList = List.of();
+    private void refreshSellList() {
+        sellList = TraderPrices.forPlayer(minecraft.player);
+    }
     private boolean sellTab = false;
     private int scroll = 0;
     private Button buyBtn;
@@ -61,16 +65,15 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
     }
 
     private int total() {
-        return sellTab ? TraderPrices.entries().size() : menu.getOffers().size();
+        return sellTab ? sellList.size() : menu.getOffers().size();
     }
-
     // ---------- Отрисовка ----------
 
     @Override
     public void render(GuiGraphics g, int mx, int my, float pt) {
         this.renderBackground(g, mx, my, pt);
         tooltip = null;
-
+        refreshSellList();
         int x = leftPos, y = topPos;
         g.fill(x, y, x + imageWidth, y + imageHeight, 0xFF1E1E1E);
         g.renderOutline(x, y, imageWidth, imageHeight, 0xFF8B8B8B);
@@ -107,10 +110,10 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
             g.fill(bx, y + LIST_Y + thumbY, bx + 4, y + LIST_Y + thumbY + thumbH, 0xFFAAAAAA);
         }
 
-        if (sellTab) {
-            g.drawString(font, Component.translatable("gui.economy_core.trader.sell_hint"),
-                    x + 8, y + imageHeight - 14, 0x888888);
-        }
+        g.drawString(font, Component.translatable(sellTab
+                        ? "gui.economy_core.trader.sell_hint"
+                        : "gui.economy_core.trader.buy_hint"),
+                x + 8, y + imageHeight - 14, 0x888888);
 
         if (tooltip != null) {
             g.renderTooltip(font, tooltip, mx, my);
@@ -127,11 +130,11 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
         int statusX = rx + LIST_W - statusW;
 
         if (sellTab) {
-            TraderPrices.SellEntry e = TraderPrices.entries().get(idx);
-            ItemStack in = new ItemStack(e.item(), e.count());
-            ItemStack out = new ItemStack(Items.EMERALD, e.emeralds());
-            int have = countItem(e.item());
-            boolean ok = have >= e.count();
+            TraderPrices.SellLine e = sellList.get(idx);
+            ItemStack in = e.stack();                                   // уже с размером партии
+            ItemStack out = new ItemStack(e.quote().currency(), e.quote().amount());
+            int have = e.have();
+            boolean ok = have >= e.quote().count();
 
             item(g, in, rx + 4, iy, mx, my);
             g.drawString(font, "→", rx + 26, iy + 4, 0xAAAAAA);
@@ -188,7 +191,12 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
         if (button == 0) {
             int idx = rowAt(mx, my);
             if (idx >= 0) {
-                int id = sellTab ? (hasShiftDown() ? TraderMenu.SELL_ALL : TraderMenu.SELL_ONE) + idx : idx;
+                int id;
+                if (sellTab) {
+                    id = (hasShiftDown() ? TraderMenu.SELL_ALL : TraderMenu.SELL_ONE) + sellList.get(idx).slot();
+                } else {
+                    id = (hasShiftDown() ? TraderMenu.BUY_ALL : 0) + idx;
+                }
                 minecraft.gameMode.handleInventoryButtonClick(menu.containerId, id);
                 minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
                 return true;

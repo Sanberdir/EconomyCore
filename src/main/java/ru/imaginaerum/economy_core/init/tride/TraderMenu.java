@@ -1,5 +1,6 @@
 package ru.imaginaerum.economy_core.init.tride;
 
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.stats.Stats;
@@ -24,9 +25,9 @@ import java.util.Optional;
 public class TraderMenu extends AbstractContainerMenu {
 
     /** id кнопки: 0..999 — купить торг №i; 1000+i — продать партию; 2000+i — продать всё. */
-    public static final int SELL_ONE = 1000;
-    public static final int SELL_ALL = 2000;
-
+    public static final int SELL_ONE = 1_000_000;
+    public static final int SELL_ALL = 2_000_000;
+    public static final int BUY_ALL = 500_000;
     @Nullable
     private final EconomyTrader trader; // на клиенте null
     private final MerchantOffers offers;
@@ -73,10 +74,26 @@ public class TraderMenu extends AbstractContainerMenu {
         if (trader == null) return false;
         if (id >= SELL_ALL) return sell(player, id - SELL_ALL, true);
         if (id >= SELL_ONE) return sell(player, id - SELL_ONE, false);
-        return buy(player, id);
+        if (id >= BUY_ALL) return buy(player, id - BUY_ALL, true);
+        return buy(player, id, false);
     }
 
-    private boolean buy(Player player, int index) {
+    private boolean buy(Player player, int index, boolean all) {
+        int deals = 0;
+        // 2000 — страховка от бесконечного цикла
+        while (deals < 2000 && buyOnce(player, index)) {
+            deals++;
+            if (!all) break;
+        }
+        if (deals <= 0) return false;
+
+        player.awardStat(Stats.TRADED_WITH_VILLAGER, deals);
+        afterTrade(player);
+        return true;
+    }
+
+    /** Одна сделка без звука и синхронизации. */
+    private boolean buyOnce(Player player, int index) {
         if (trader == null) return false;
         if (index < 0 || index >= offers.size()) return false;
         MerchantOffer offer = offers.get(index);
@@ -85,7 +102,7 @@ public class TraderMenu extends AbstractContainerMenu {
 
         ItemCost a = offer.getItemCostA();
         Optional<ItemCost> b = offer.getItemCostB();
-        int needA = offer.getCostA().getCount();    // с учётом репутации и спроса
+        int needA = offer.getCostA().getCount();    // пересчитывается каждую сделку
         int needB = offer.getCostB().getCount();
 
         if (count(player, a) < needA) return false;
@@ -99,7 +116,6 @@ public class TraderMenu extends AbstractContainerMenu {
         uses.get(index).set(offer.getUses());
 
         give(player, offer.getResult().copy());
-        afterTrade(player);
         return true;
     }
 
@@ -136,24 +152,48 @@ public class TraderMenu extends AbstractContainerMenu {
             offer.increaseUses();
         }
     }
-    private boolean sell(Player player, int index, boolean all) {
-        List<TraderPrices.SellEntry> list = TraderPrices.entries();
-        if (index < 0 || index >= list.size()) return false;
-        TraderPrices.SellEntry e = list.get(index);
+    private boolean sell(Player player, int slot, boolean all) {
+        if (trader == null) return false;
+        List<ItemStack> inv = player.getInventory().items;
+        if (slot < 0 || slot >= inv.size() || inv.get(slot).isEmpty()) return false;
 
-        int have = countItem(player, e.item());
-        int batches = Math.min(have / e.count(), all ? Integer.MAX_VALUE : 1);
+        ItemStack proto = inv.get(slot).copyWithCount(1);
+        TraderPrices.Quote q = TraderPrices.quote(proto);        // цену считаем на сервере заново
+        if (q == null) return false;
+
+        int have = countSame(player, proto);
+        int batches = Math.min(have / q.count(), all ? Integer.MAX_VALUE : 1);
         if (batches <= 0) return false;
 
-        removeItem(player, e.item(), batches * e.count());
+        removeSame(player, proto, batches * q.count());
+        EconomyBank.giveCurrency(player, q.currency(), batches * q.amount());
+        trader.spawnSellXp(batches * q.xp());
 
-        EconomyBank.giveEmeralds(player, batches * e.emeralds());
         afterTrade(player);
         return true;
     }
 
+    private static int countSame(Player player, ItemStack proto) {
+        int n = 0;
+        for (ItemStack s : player.getInventory().items) {
+            if (ItemStack.isSameItemSameComponents(s, proto)) n += s.getCount();
+        }
+        return n;
+    }
+
+    private static void removeSame(Player player, ItemStack proto, int amount) {
+        for (ItemStack s : player.getInventory().items) {
+            if (amount <= 0) break;
+            if (ItemStack.isSameItemSameComponents(s, proto)) {
+                int take = Math.min(amount, s.getCount());
+                s.shrink(take);
+                amount -= take;
+            }
+        }
+    }
+
     private void afterTrade(Player player) {
-        player.awardStat(Stats.TRADED_WITH_VILLAGER);
+        // player.awardStat(Stats.TRADED_WITH_VILLAGER);  <- удалить
         if (trader != null) {
             trader.playSound(SoundEvents.VILLAGER_YES, 1.0F, trader.getVoicePitch());
         }

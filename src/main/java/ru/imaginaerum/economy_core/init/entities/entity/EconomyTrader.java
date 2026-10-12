@@ -274,6 +274,12 @@ public class EconomyTrader extends AbstractVillager {
         }
         return orig.getUses();
     }
+    /** Сферы опыта у торговца. */
+    public void spawnSellXp(int xp) {
+        if (xp > 0 && this.level() instanceof ServerLevel sl) {
+            ExperienceOrb.award(sl, this.position().add(0, 0.5D, 0), xp);
+        }
+    }
     /**
      * Фильтр торгов. Сейчас берём всё.
      * Потом сюда можно добавить разделение на «купить» и «продать».

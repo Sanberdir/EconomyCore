@@ -1,8 +1,6 @@
 {
   "entity.economy_core.trader": "Trader",
   "item.economy_core.trader_spawn_egg": "Trader Spawn Egg",
-  "message.economy_core.trader.no_village": "The trader couldn't find a bed nearby",
-  "message.economy_core.trader.no_offers": "The village has nothing to trade yet",
 
   "gui.economy_core.trader.buy": "Buy",
   "gui.economy_core.trader.sell": "Sell",
@@ -10,11 +8,13 @@
   "gui.economy_core.trader.sell_hint": "LMB - sell a batch, Shift+LMB - sell everything",
   "gui.economy_core.trader.sold_out": "Sold Out",
   "gui.economy_core.trader.have": "You have: %s",
+  "gui.economy_core.trader.buy_hint": "ЛКМ - купить, Shift+ЛКМ - купить всё",
 
   "message.economy_core.deposit": "Deposited to account: %s",
   "message.economy_core.withdraw": "Withdrawn from account: %s",
   "message.economy_core.empty": "No emeralds in the account",
-
   "message.economy_core.to_account": "No room in inventory, deposited to account: %s",
-  "message.economy_core.no_room": "No room in inventory"
+  "message.economy_core.no_room": "No room in inventory",
+  "message.economy_core.trader.no_village": "The trader couldn't find a bed nearby",
+  "message.economy_core.trader.no_offers": "The village has nothing to trade yet"
 }

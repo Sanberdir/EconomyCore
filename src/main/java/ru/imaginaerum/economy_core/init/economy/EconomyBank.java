@@ -6,6 +6,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.trading.ItemCost;
@@ -141,7 +142,21 @@ public final class EconomyBank {
             withdraw(p);
         }
     }
-
+    /** Выдаёт валюту: изумруды идут через счёт, остальное в инвентарь, излишек выбрасывается. */
+    public static void giveCurrency(Player p, Item currency, int amount) {
+        if (amount <= 0) return;
+        if (currency == Items.EMERALD) {
+            giveEmeralds(p, amount);
+            return;
+        }
+        int max = new ItemStack(currency).getMaxStackSize();
+        int left = amount;
+        while (left > 0) {
+            int n = Math.min(max, left);
+            giveOrDrop(p, new ItemStack(currency, n));
+            left -= n;
+        }
+    }
     private static void feedback(Player p, Component msg) {
         p.displayClientMessage(msg, true); // над хотбаром
         p.level().playSound(null, p.blockPosition(), SoundEvents.EXPERIENCE_ORB_PICKUP,
