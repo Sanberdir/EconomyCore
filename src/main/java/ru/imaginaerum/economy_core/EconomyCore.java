@@ -38,6 +38,7 @@ import ru.imaginaerum.economy_core.init.economy.EconomyAttachments;
 import ru.imaginaerum.economy_core.init.entities.EconomyEntities;
 import ru.imaginaerum.economy_core.init.entities.entity.EconomyTrader;
 import ru.imaginaerum.economy_core.init.entities.renderer.EconomyTraderRenderer;
+import ru.imaginaerum.economy_core.init.items.EcoItems;
 import ru.imaginaerum.economy_core.init.tride.EconomyMenus;
 import ru.imaginaerum.economy_core.init.tride.TraderScreen;
 
@@ -57,6 +58,7 @@ public class EconomyCore {
         modEventBus.addListener(this::registerAttributes);
         EconomyMenus.MENUS.register(modEventBus);
         NeoForge.EVENT_BUS.register(this);
+        EcoItems.ITEMS.register(modEventBus);
 
         EconomyAttachments.ATTACHMENTS.register(modEventBus);
         // Register our mod's ModConfigSpec so that FML can create and load the config file for us

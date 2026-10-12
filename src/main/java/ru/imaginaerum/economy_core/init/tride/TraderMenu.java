@@ -120,8 +120,8 @@ public class TraderMenu extends AbstractContainerMenu {
     }
 
     private static int count(Player player, ItemCost cost) {
-        if (EconomyBank.isEmerald(cost)) {
-            return EconomyBank.total(player);          // инвентарь + счёт
+        if (EconomyBank.isCurrency(cost)) {
+            return EconomyBank.total(player, cost.item().value());   // инвентарь + счёт
         }
         int n = 0;
         for (ItemStack s : player.getInventory().items) {
@@ -131,8 +131,8 @@ public class TraderMenu extends AbstractContainerMenu {
     }
 
     private static void remove(Player player, ItemCost cost, int amount) {
-        if (EconomyBank.isEmerald(cost)) {
-            EconomyBank.spend(player, amount);
+        if (EconomyBank.isCurrency(cost)) {
+            EconomyBank.spend(player, cost.item().value(), amount);
             return;
         }
         int left = amount;

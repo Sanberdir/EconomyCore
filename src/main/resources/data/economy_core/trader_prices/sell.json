@@ -28,7 +28,7 @@
     {
       "item": "minecraft:enchanted_book",
       "emeralds": 1,
-      "currency": "minecraft:lapis_lazuli",
+      "currency": "economy_core:gold_coin",
       "enchant_per_level": 2,
       "enchants": { "minecraft:mending": 15, "minecraft:sharpness": 3, "minecraft:protection": 3 },
       "xp": 5

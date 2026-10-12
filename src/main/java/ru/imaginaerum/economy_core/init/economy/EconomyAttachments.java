@@ -21,4 +21,10 @@ public class EconomyAttachments {
                     .sync(ByteBufCodecs.VAR_INT)
                     .copyOnDeath()
                     .build());
+    public static final Supplier<AttachmentType<Integer>> COIN_BALANCE = ATTACHMENTS.register("coin_balance",
+            () -> AttachmentType.builder(() -> 0)
+                    .serialize(Codec.INT)
+                    .sync(ByteBufCodecs.VAR_INT)
+                    .copyOnDeath()
+                    .build());
 }

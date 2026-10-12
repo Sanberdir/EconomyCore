@@ -13,6 +13,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.trading.MerchantOffer;
 import ru.imaginaerum.economy_core.init.economy.EconomyBank;
+import ru.imaginaerum.economy_core.init.items.EcoItems;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -82,7 +83,9 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
 // Изумруды игрока
         g.renderItem(EMERALD, x + imageWidth - 52, y + 16);
         g.drawString(font, String.valueOf(countEmeralds()), x + imageWidth - 34, y + 20, 0x55FF55);
-
+        g.renderItem(new ItemStack(EcoItems.GOLD_COIN.get()), x + imageWidth - 52, y + 2);
+        g.drawString(font, String.valueOf(EconomyBank.total(minecraft.player, EcoItems.GOLD_COIN.get())),
+                x + imageWidth - 34, y + 6, 0xFFD700);
         buyBtn.render(g, mx, my, pt);
         sellBtn.render(g, mx, my, pt);
 
@@ -220,12 +223,12 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
     }
 
     private int countEmeralds() {
-        return EconomyBank.total(minecraft.player);
+        return EconomyBank.total(minecraft.player, Items.EMERALD);
     }
 
     private boolean has(ItemStack need) {
-        if (need.is(Items.EMERALD)) {
-            return EconomyBank.total(minecraft.player) >= need.getCount();
+        if (EconomyBank.isCurrency(need)) {
+            return EconomyBank.total(minecraft.player, need.getItem()) >= need.getCount();
         }
         int n = 0;
         for (ItemStack s : minecraft.player.getInventory().items) {

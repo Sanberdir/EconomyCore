@@ -14,6 +14,7 @@ public class BankClientEvents {
     @SubscribeEvent
     public static void onEmptyClick(PlayerInteractEvent.RightClickEmpty e) {
         var p = e.getEntity();
+
         if (e.getHand() == InteractionHand.MAIN_HAND && p.isShiftKeyDown()
                 && p.getMainHandItem().isEmpty() && p.getOffhandItem().isEmpty()) {
             PacketDistributor.sendToServer(new WithdrawPayload());

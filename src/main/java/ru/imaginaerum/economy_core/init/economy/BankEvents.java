@@ -13,29 +13,30 @@ import ru.imaginaerum.economy_core.EconomyCore;
 @EventBusSubscriber(modid = EconomyCore.MODID)
 public class BankEvents {
 
-    /** Shift + ПКМ изумрудами по воздуху. */
+    /** Shift + ПКМ валютой по воздуху: внести на счёт. */
     @SubscribeEvent
     public static void onUseItem(PlayerInteractEvent.RightClickItem e) {
         Player p = e.getEntity();
         if (p.level().isClientSide || !p.isShiftKeyDown()) return;
         ItemStack s = e.getItemStack();
-        if (!s.is(Items.EMERALD)) return;
+        if (!EconomyBank.isCurrency(s)) return;
 
         EconomyBank.deposit(p, s);
         e.setCancellationResult(InteractionResult.SUCCESS);
         e.setCanceled(true);
     }
 
-    /** Shift + ПКМ по блоку: изумруды вносим, пустой рукой снимаем. */
+    /** Shift + ПКМ по блоку: валюту вносим, вывод пустой рукой (если включён). */
     @SubscribeEvent
     public static void onUseBlock(PlayerInteractEvent.RightClickBlock e) {
         Player p = e.getEntity();
         if (p.level().isClientSide || !p.isShiftKeyDown()) return;
 
         ItemStack s = e.getItemStack();
-        if (s.is(Items.EMERALD)) {
+        if (EconomyBank.isCurrency(s)) {
             EconomyBank.deposit(p, s);
-        } else if (e.getHand() == InteractionHand.MAIN_HAND
+        } else if (EconomyBank.WITHDRAW_ENABLED
+                && e.getHand() == InteractionHand.MAIN_HAND
                 && s.isEmpty() && p.getOffhandItem().isEmpty()) {
             EconomyBank.withdraw(p);
         } else {

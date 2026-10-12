@@ -9,6 +9,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.slf4j.Logger;
+import ru.imaginaerum.economy_core.init.economy.EconomyBank;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -33,7 +34,7 @@ public final class TraderPrices {
     private static volatile List<String> RAW = List.of();
 
     public static boolean isCurrency(Item item) {
-        return CURRENCY.contains(item);
+        return EconomyBank.isCurrency(item);
     }
 
     /** Исходные JSON-записи (для отправки клиенту). */

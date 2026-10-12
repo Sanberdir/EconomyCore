@@ -1,6 +1,6 @@
 {
   "entity.economy_core.trader": "Торговец",
-  "item.economy_core.trader_spawn_egg": "Яйцо призыва торговца",
+  "item.economy_core.gold_coin": "Золотая монета",
 
   "gui.economy_core.trader.buy": "Купить",
   "gui.economy_core.trader.sell": "Продать",
@@ -8,13 +8,15 @@
   "gui.economy_core.trader.sell_hint": "ЛКМ - продать партию, Shift+ЛКМ - продать всё",
   "gui.economy_core.trader.sold_out": "Распродано",
   "gui.economy_core.trader.have": "У вас: %s",
-  "gui.economy_core.trader.buy_hint": "LMB - buy, Shift+LMB - buy everything",
+  "gui.economy_core.trader.buy_hint": "ЛКМ - купить, Shift+ЛКМ - купить всё",
 
-  "message.economy_core.deposit": "На счёт внесено: %s",
-  "message.economy_core.withdraw": "Снято со счёта: %s",
+
   "message.economy_core.empty": "На счёте нет изумрудов",
   "message.economy_core.trader.no_village": "Торговец не нашёл кровать поблизости",
   "message.economy_core.trader.no_offers": "В деревне пока нечем торговать",
-  "message.economy_core.to_account": "Нет места, на счёт зачислено: %s",
-  "message.economy_core.no_room": "В инвентаре нет места"
+  "message.economy_core.no_room": "В инвентаре нет места",
+
+  "message.economy_core.deposit": "На счёт внесено: %s × %s",
+  "message.economy_core.withdraw": "Снято со счёта: %s × %s",
+  "message.economy_core.to_account": "Нет места, на счёт зачислено: %s × %s"
 }
