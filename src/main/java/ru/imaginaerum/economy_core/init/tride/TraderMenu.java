@@ -4,6 +4,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.stats.Stats;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -58,7 +59,9 @@ public class TraderMenu extends AbstractContainerMenu {
             uses.add(slot);
         }
     }
-
+    public static int encode(boolean sell, int qty, int index) {
+        return ((sell ? 1000 : 0) + Mth.clamp(qty, 1, 999)) * 1000 + index;
+    }
     public MerchantOffers getOffers() {
         return offers;
     }
@@ -71,19 +74,18 @@ public class TraderMenu extends AbstractContainerMenu {
 
     @Override
     public boolean clickMenuButton(Player player, int id) {
-        if (trader == null) return false;
-        if (id >= SELL_ALL) return sell(player, id - SELL_ALL, true);
-        if (id >= SELL_ONE) return sell(player, id - SELL_ONE, false);
-        if (id >= BUY_ALL) return buy(player, id - BUY_ALL, true);
-        return buy(player, id, false);
+        if (trader == null || id < 0) return false;
+        int index = id % 1000;
+        int qty = (id / 1000) % 1000;
+        boolean sell = id / 1_000_000 > 0;
+        if (qty <= 0) return false;
+        return sell ? sell(player, index, qty) : buy(player, index, qty);
     }
 
-    private boolean buy(Player player, int index, boolean all) {
+    private boolean buy(Player player, int index, int qty) {
         int deals = 0;
-        // 2000 — страховка от бесконечного цикла
-        while (deals < 2000 && buyOnce(player, index)) {
+        while (deals < qty && buyOnce(player, index)) {
             deals++;
-            if (!all) break;
         }
         if (deals <= 0) return false;
 
@@ -152,17 +154,17 @@ public class TraderMenu extends AbstractContainerMenu {
             offer.increaseUses();
         }
     }
-    private boolean sell(Player player, int slot, boolean all) {
+    private boolean sell(Player player, int slot, int maxBatches) {
         if (trader == null) return false;
         List<ItemStack> inv = player.getInventory().items;
         if (slot < 0 || slot >= inv.size() || inv.get(slot).isEmpty()) return false;
 
         ItemStack proto = inv.get(slot).copyWithCount(1);
-        TraderPrices.Quote q = TraderPrices.quote(proto);        // цену считаем на сервере заново
+        TraderPrices.Quote q = TraderPrices.quote(proto);
         if (q == null) return false;
 
         int have = countSame(player, proto);
-        int batches = Math.min(have / q.count(), all ? Integer.MAX_VALUE : 1);
+        int batches = Math.min(have / q.count(), maxBatches);
         if (batches <= 0) return false;
 
         removeSame(player, proto, batches * q.count());

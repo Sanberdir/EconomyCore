@@ -14,9 +14,7 @@ public class VillagerTradeBlocker {
 
     @SubscribeEvent
     public static void onEntityInteract(PlayerInteractEvent.EntityInteract event) {
-        System.out.println("[Blocker] EntityInteract target=" + event.getTarget().getClass().getSimpleName());
         if (isBlocked(event.getTarget())) {
-            System.out.println("[Blocker] CANCELLED");
             event.setCanceled(true);
             event.setCancellationResult(InteractionResult.FAIL);
         }

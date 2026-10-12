@@ -36,8 +36,8 @@ public class EmeraldHud {
                     // .get() вызывается уже в рантайме — предмет зарегистрирован
                     ItemStack coin = new ItemStack(EcoItems.GOLD_COIN.get());
 
-                    drawLine(g, mc, EMERALD, EconomyBank.total(mc.player, Items.EMERALD), 0x55FF55, 22);
-                    drawLine(g, mc, coin, EconomyBank.total(mc.player, EcoItems.GOLD_COIN.get()), 0xFFD700, 42);
+                    drawLine(g, mc, EMERALD, EconomyBank.total(mc.player, Items.EMERALD), 0xFFFFFF, 22);
+                    drawLine(g, mc, coin, EconomyBank.total(mc.player, EcoItems.GOLD_COIN.get()), 0xFFFFFF, 42);
                 });
     }
 }
