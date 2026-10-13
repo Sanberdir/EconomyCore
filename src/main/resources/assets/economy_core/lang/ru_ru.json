@@ -21,6 +21,10 @@
   "gui.economy_core.trader.max": "Макс",
   "gui.economy_core.trader.confirm_buy": "Подтверждение покупки",
   "gui.economy_core.trader.confirm_sell": "Подтверждение продажи",
+
+  "gui.economy_core.trader.universal": "Универсал",
+
+
   "message.economy_core.empty": "На счёте нет изумрудов",
   "message.economy_core.trader.no_village": "Торговец не нашёл кровать поблизости",
   "message.economy_core.trader.no_offers": "В деревне пока нечем торговать",

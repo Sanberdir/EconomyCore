@@ -2,6 +2,8 @@ package ru.imaginaerum.economy_core.init.tride;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.Mth;
@@ -45,9 +47,28 @@ public class TraderMenu extends AbstractContainerMenu {
         this.trader = null;
         buf.readVarInt(); // id сущности, пока не нужен
         this.offers = MerchantOffers.STREAM_CODEC.decode(buf);
+        this.specialization = specComponent(buf.readUtf());
         initUses();
     }
-
+    @Nullable
+    private Component specialization;
+    @Nullable
+    private static Component specComponent(String key) {
+        if (key.isEmpty()) return null;
+        if (key.equals("universal")) {
+            return Component.translatable("gui.economy_core.trader.universal");
+        }
+        ResourceLocation id = ResourceLocation.tryParse(key);
+        if (id == null) return null;
+        String path = id.getNamespace().equals("minecraft")
+                ? id.getPath()
+                : id.getNamespace() + "." + id.getPath();
+        return Component.translatable("entity.minecraft.villager." + path);
+    }
+    @Nullable
+    public Component getSpecialization() {
+        return specialization;
+    }
     private void initUses() {
         for (MerchantOffer offer : offers) {
             DataSlot slot = DataSlot.standalone();

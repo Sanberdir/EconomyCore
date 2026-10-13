@@ -22,6 +22,8 @@
   "gui.economy_core.trader.confirm_buy": "Confirm purchase",
   "gui.economy_core.trader.confirm_sell": "Confirm sale",
 
+  "gui.economy_core.trader.universal": "Universal",
+
   "message.economy_core.empty": "No emeralds in the account",
   "message.economy_core.no_room": "No room in inventory",
   "message.economy_core.trader.no_village": "The trader couldn't find a bed nearby",

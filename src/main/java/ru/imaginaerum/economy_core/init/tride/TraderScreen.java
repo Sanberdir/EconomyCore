@@ -25,10 +25,10 @@ import java.util.List;
 public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
 
     // ---- сетка лотов ----
-    private static final int COLS = 10;
+    private static final int COLS = 7;
     private static final int ROWS = 3;
-    private static final int CELL_W = 26;
-    private static final int CELL_H = 30;
+    private static final int CELL_W = 36;
+    private static final int CELL_H = 36;
     private static final int LIST_X = 8;
     private static final int LIST_Y = 22;
     private static final int GRID_W = COLS * CELL_W;
@@ -65,7 +65,7 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
     public TraderScreen(TraderMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
         this.imageWidth = 280;
-        this.imageHeight = 226;
+        this.imageHeight = INV_Y + 4 * SLOT + 22;
     }
 
     private void refreshSellList() {
@@ -189,6 +189,16 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
         rightEdge = drawBalance(g, EMERALD,
                 String.valueOf(EconomyBank.total(minecraft.player, Items.EMERALD)), rightEdge, y + 3);
         rightEdge -= 10;
+        Component spec = menu.getSpecialization();
+        if (spec != null) {
+            int sx = x + 8 + font.width(title) + 6;
+            int avail = rightEdge - 6 - sx;
+            if (avail > 20) {
+                g.drawString(font,
+                        font.plainSubstrByWidth("· " + spec.getString(), avail),
+                        sx, y + 5, 0xFFD700);
+            }
+        }
         drawBalance(g, new ItemStack(EcoItems.GOLD_COIN.get()),
                 String.valueOf(EconomyBank.total(minecraft.player, EcoItems.GOLD_COIN.get())), rightEdge, y + 3);
 
@@ -272,20 +282,33 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
         if (hovered) g.renderOutline(cx, cy, CELL_W - 1, CELL_H - 1, 0xFFFFFFFF);
 
         int ix = cx + (CELL_W - 1 - 16) / 2;
-        int iy = cy + 2;
+        int iy = cy + 3;
         g.renderItem(l.item(), ix, iy);
         g.renderItemDecorations(font, l.item(), ix, iy);
 
-
-        int py = cy + 21;
+        int py = cy + 24;
         if (l.soldOut()) {
             g.drawCenteredString(font, "✘", cx + (CELL_W - 1) / 2, py, 0xFF5555);
-        } else {
-            int color = l.affordable() ? 0xFFFFFF : 0xFF5555;
-            String text = shortNum(l.priceA().getCount());
-            int w = costWidth(text, 0.5f, 0.75f);
-            drawCost(g, l.priceA(), text, color, cx + (CELL_W - 1 - w) / 2, py, 0.5f, 0.75f);
+            return;
         }
+
+        int color = l.affordable() ? 0xFFFFFF : 0xFF5555;
+        String text = String.valueOf(l.priceA().getCount());
+
+        final float iconScale = 0.5f;
+        int iconW = Math.round(16 * iconScale);
+        int maxTextW = CELL_W - 1 - 2 - iconW - 1;      // отступ по 1 px с боков
+        float textScale = fitScale(text, maxTextW);
+
+        int w = costWidth(text, iconScale, textScale);
+        drawCost(g, l.priceA(), text, color, cx + (CELL_W - 1 - w) / 2, py, iconScale, textScale);
+    }
+
+    /** Чем длиннее число, тем меньше шрифт. Минимум 0.4. */
+    private float fitScale(String text, int maxW) {
+        int w = font.width(text);
+        if (w <= maxW) return 1f;
+        return Math.max(0.4f, (float) Math.floor(maxW * 20f / w) / 20f);
     }
 
     private void renderInvSlot(GuiGraphics g, int i, int sx, int sy, boolean hovered) {
@@ -525,8 +548,22 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
         return costWidth(text, iconScale, textScale);
     }
 
-    private static String shortNum(int n) {
-        return n >= 1000 ? (n / 1000) + "k" : String.valueOf(n);
+    private static String shortNum(long n) {
+        if (n >= 1_000_000L) return millions(n);
+        if (n >= 1_000L) return (n / 1_000L) + "k";
+        return String.valueOf(n);
+    }
+
+    /** Для подсказки и диалога (места больше): сокращаем только миллионы. */
+    private static String bigNum(long n) {
+        return n >= 1_000_000L ? millions(n) : String.valueOf(n);
+    }
+
+    private static String millions(long n) {
+        long tenths = n / 100_000L;                 // в десятых долях миллиона
+        return (tenths % 10 == 0)
+                ? (tenths / 10) + "M"
+                : (tenths / 10) + "." + (tenths % 10) + "M";
     }
 
     private static boolean hit(double mx, double my, int x, int y, int w, int h) {
