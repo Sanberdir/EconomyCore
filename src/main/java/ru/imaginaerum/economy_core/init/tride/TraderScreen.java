@@ -59,7 +59,9 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
     private int dialogKey = -1;
     private boolean dialogSell = false;
     private int qty = 1;
-
+    private boolean qtyFieldFocused = false;
+    private String qtyFieldText = "";
+    private static final int QTY_FIELD_MAX_LEN = 4;
     public TraderScreen(TraderMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
         this.imageWidth = 280;
@@ -92,9 +94,8 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
 
         MerchantOffer o = menu.getOffers().get(idx);
         int stock = o.getMaxUses() - menu.getUses(idx);
-        ItemStack a = o.getCostA();
-        ItemStack b = o.getCostB();
-
+        ItemStack a = TradePricing.costA(o);
+        ItemStack b = TradePricing.costB(o);
         int m = Math.max(0, stock);
         if (!a.isEmpty()) m = Math.min(m, owned(a) / Math.max(1, a.getCount()));
         if (!b.isEmpty()) m = Math.min(m, owned(b) / Math.max(1, b.getCount()));
@@ -433,6 +434,7 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
                 ? "gui.economy_core.trader.confirm_sell"
                 : "gui.economy_core.trader.confirm_buy"), dx + DLG_W / 2, dy + 6, 0xFFFFFF);
 
+        // ---- иконка предмета + имя + количество ----
         g.fill(dx + 8, dy + 20, dx + 28, dy + 40, 0xFF161616);
         g.renderOutline(dx + 8, dy + 20, 20, 20, 0xFF3A3A3A);
         g.renderItem(l.item(), dx + 10, dy + 22);
@@ -443,16 +445,32 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
                         l.item().getCount() * qty),
                 dx + 34, dy + 32, 0xAAAAAA);
 
+        // ---- строка количества: − [поле] + MAX ----
         int qy = dy + 48;
         drawButton(g, dx + 16, qy, 16, 16, "−", qty > 1, mx, my, 0xFFFFFFFF);
-        g.fill(dx + 34, qy, dx + 86, qy + 16, 0xFF161616);
-        g.renderOutline(dx + 34, qy, 52, 16, 0xFF555555);
-        g.drawCenteredString(font, String.valueOf(qty), dx + 60, qy + 4, canConfirm ? 0xFFFFFF : 0xFF5555);
+
+        int fieldX = dx + 34;
+        int fieldY = qy;
+        int fieldW = 52;
+        int fieldH = 16;
+        boolean fieldHover = hit(mx, my, fieldX, fieldY, fieldW, fieldH);
+        g.fill(fieldX, fieldY, fieldX + fieldW, fieldY + fieldH, 0xFF161616);
+        g.renderOutline(fieldX, fieldY, fieldW, fieldH,
+                qtyFieldFocused ? 0xFFFFFF : (fieldHover ? 0xFFAAAAAA : 0xFF555555));
+
+        String shown = qtyFieldFocused ? qtyFieldText : String.valueOf(qty);
+        if (qtyFieldFocused && (System.currentTimeMillis() / 500L) % 2 == 0) {
+            shown = shown + "_";
+        }
+        g.drawCenteredString(font, shown, fieldX + fieldW / 2, fieldY + 4,
+                canConfirm ? 0xFFFFFF : 0xFF5555);
+
         drawButton(g, dx + 88, qy, 16, 16, "+", qty < maxQ, mx, my, 0xFFFFFFFF);
         drawButton(g, dx + 110, qy, 50, 16,
                 Component.translatable("gui.economy_core.trader.max").getString(),
                 qty < maxQ, mx, my, 0xFFFFFFFF);
 
+        // ---- итог по цене ----
         int ty = dy + 70;
         Component totalLabel = Component.translatable("gui.economy_core.trader.total");
         g.drawString(font, totalLabel, dx + 16, ty + 2, 0xAAAAAA);
@@ -465,6 +483,7 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
                     color, px, ty, 0.75f, 1f);
         }
 
+        // ---- кнопки Да / Нет ----
         int by = dy + 88;
         drawButton(g, dx + DLG_W / 2 - 44, by, 40, 16, "✔", canConfirm, mx, my, 0xFF55FF55);
         drawButton(g, dx + DLG_W / 2 + 4, by, 40, 16, "✘", true, mx, my, 0xFFFF5555);
@@ -554,6 +573,8 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
         dialogKey = key;
         dialogSell = sell;
         qty = 1;
+        qtyFieldFocused = false;
+        qtyFieldText = "1";
         click();
     }
 
@@ -566,6 +587,18 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
         int maxQ = Math.max(1, l.maxQty());
         int qy = dy + 48;
         int by = dy + 88;
+
+        // поле ввода количества
+        if (hit(mx, my, dx + 34, qy, 52, 16)) {
+            qtyFieldFocused = true;
+            qtyFieldText = String.valueOf(qty);
+            return;
+        }
+
+        // клик мимо поля — снимаем фокус
+        if (qtyFieldFocused) {
+            commitQtyField(maxQ);
+        }
 
         if (hit(mx, my, dx + 16, qy, 16, 16)) {
             qty = Mth.clamp(qty - step, 1, maxQ); click();
@@ -581,19 +614,32 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
             closeDialog();
         }
     }
-
+    private void commitQtyField(int maxQ) {
+        qtyFieldFocused = false;
+        try {
+            int v = Integer.parseInt(qtyFieldText.trim());
+            qty = Mth.clamp(v, 1, maxQ);
+        } catch (NumberFormatException ignored) {
+            // оставляем прежнее qty
+        }
+        qtyFieldText = String.valueOf(qty);
+    }
     private void confirm() {
         Lot l = dialogLot();
         if (l == null || l.maxQty() < 1) { dialogKey = -1; return; }
+        if (qtyFieldFocused) commitQtyField(Math.max(1, l.maxQty()));
         int q = Mth.clamp(qty, 1, Math.min(999, l.maxQty()));
         minecraft.gameMode.handleInventoryButtonClick(menu.containerId,
                 TraderMenu.encode(dialogSell, q, dialogKey));
         click();
         dialogKey = -1;
+        qtyFieldFocused = false;
     }
 
     private void closeDialog() {
         dialogKey = -1;
+        qtyFieldFocused = false;
+        qtyFieldText = "";
         click();
     }
 
@@ -604,6 +650,34 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
     @Override
     public boolean keyPressed(int key, int scan, int mods) {
         if (dialogKey >= 0) {
+            Lot l = dialogLot();
+            int maxQ = l == null ? 1 : Math.max(1, l.maxQty());
+
+            if (qtyFieldFocused) {
+                if (key == GLFW.GLFW_KEY_ENTER || key == GLFW.GLFW_KEY_KP_ENTER) {
+                    commitQtyField(maxQ);
+                    return true;
+                }
+                if (key == GLFW.GLFW_KEY_ESCAPE) {
+                    qtyFieldFocused = false;
+                    qtyFieldText = String.valueOf(qty);
+                    return true;
+                }
+                if (key == GLFW.GLFW_KEY_BACKSPACE) {
+                    if (!qtyFieldText.isEmpty()) {
+                        qtyFieldText = qtyFieldText.substring(0, qtyFieldText.length() - 1);
+                    }
+                    return true;
+                }
+                if (key == GLFW.GLFW_KEY_DELETE) {
+                    qtyFieldText = "";
+                    return true;
+                }
+                // ВАЖНО: цифры здесь больше НЕ обрабатываем — этим занимается charTyped.
+                // Всё остальное тоже глушим, чтобы не улетало в super.
+                return true;
+            }
+
             if (key == GLFW.GLFW_KEY_ENTER || key == GLFW.GLFW_KEY_KP_ENTER) confirm();
             else if (key == GLFW.GLFW_KEY_ESCAPE) closeDialog();
             return true;
@@ -612,8 +686,20 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
     }
 
     @Override
+    public boolean charTyped(char c, int mods) {
+        if (dialogKey >= 0 && qtyFieldFocused) {
+            if (c >= '0' && c <= '9' && qtyFieldText.length() < QTY_FIELD_MAX_LEN) {
+                if (qtyFieldText.equals("0")) qtyFieldText = "";
+                qtyFieldText += c;
+            }
+            return true;
+        }
+        return super.charTyped(c, mods);
+    }
+    @Override
     public boolean mouseScrolled(double mx, double my, double scrollX, double scrollY) {
         if (dialogKey >= 0) {
+            if (qtyFieldFocused) return true; // игнорируем
             Lot l = dialogLot();
             int maxQ = l == null ? 1 : Math.max(1, l.maxQty());
             int step = hasShiftDown() ? 10 : 1;

@@ -1,50 +1,50 @@
 {
   "entries": [
-    { "item": "minecraft:copper_ingot",    "count": 6,  "emeralds": 5,   "currency": "economy_core:gold_coin" },
-    { "item": "minecraft:iron_ingot",      "count": 3,  "emeralds": 30,  "currency": "economy_core:gold_coin" },
-    { "item": "minecraft:gold_ingot",      "count": 1,  "emeralds": 20,  "currency": "economy_core:gold_coin" },
-    { "item": "minecraft:diamond",         "count": 1,  "emeralds": 80,  "currency": "economy_core:gold_coin" },
+    { "item": "minecraft:copper_ingot",    "count": 1,  "emeralds": 20,   "currency": "economy_core:gold_coin","xp": 1  },
+    { "item": "minecraft:iron_ingot",      "count": 1,  "emeralds": 50,  "currency": "economy_core:gold_coin", "xp": 3 },
+    { "item": "minecraft:gold_ingot",      "count": 1,  "emeralds": 80,  "currency": "economy_core:gold_coin","xp": 5 },
+    { "item": "minecraft:diamond",         "count": 1,  "emeralds": 400,  "currency": "economy_core:gold_coin", "xp": 8 },
 
-    { "item": "minecraft:netherite_ingot", "count": 1,  "emeralds": 8, "currency": "minecraft:emerald", "xp": 20 },
+    { "item": "minecraft:netherite_ingot", "count": 1,  "emeralds": 12, "currency": "minecraft:emerald", "xp": 20 },
 
     { "tag": "minecraft:coals",            "count": 8,  "emeralds": 5,   "currency": "economy_core:gold_coin" },
     { "tag": "minecraft:logs",             "count": 16, "emeralds": 5,   "currency": "economy_core:gold_coin", "xp": 1 },
 
-    { "item": "minecraft:diamond_sword",   "emeralds": 4, "currency": "minecraft:emerald", "xp": 8,
+    { "item": "minecraft:diamond_sword",   "emeralds": 8, "currency": "minecraft:emerald", "xp": 8,
       "scale_durability": true, "enchant_per_level": 1 },
-    { "item": "minecraft:iron_sword",      "emeralds": 40, "currency": "economy_core:gold_coin",
+    { "item": "minecraft:iron_sword",      "emeralds": 65, "currency": "economy_core:gold_coin","xp": 8,
       "scale_durability": true, "enchant_per_level": 1 },
-    { "tag": "minecraft:swords",           "emeralds": 20, "currency": "economy_core:gold_coin",
+    { "tag": "minecraft:swords",           "emeralds": 40, "currency": "economy_core:gold_coin","xp": 8,
       "scale_durability": true, "enchant_per_level": 1 },
-    { "tag": "minecraft:pickaxes",         "emeralds": 30, "currency": "economy_core:gold_coin",
+    { "tag": "minecraft:pickaxes",         "emeralds": 30, "currency": "economy_core:gold_coin","xp": 8,
       "scale_durability": true, "enchant_per_level": 1 },
-    { "item": "minecraft:diamond_pickaxe", "emeralds": 6, "currency": "economy_core:gold_coin", "xp": 8,
+    { "item": "minecraft:diamond_pickaxe", "emeralds": 250, "currency": "economy_core:gold_coin", "xp": 8,
       "scale_durability": true, "enchant_per_level": 1 },
 
-    { "item": "minecraft:diamond_chestplate", "emeralds": 6, "currency": "economy_core:gold_coin", "xp": 10,
+    { "item": "minecraft:diamond_chestplate", "emeralds": 400, "currency": "economy_core:gold_coin", "xp": 10,
       "scale_durability": true, "enchant_per_level": 1 },
-    { "tag": "minecraft:chest_armor",         "emeralds": 40, "currency": "economy_core:gold_coin",
+    { "tag": "minecraft:chest_armor",         "emeralds": 100, "currency": "economy_core:gold_coin","xp": 8,
       "scale_durability": true, "enchant_per_level": 1 },
-    { "tag": "minecraft:head_armor",          "emeralds": 30, "currency": "economy_core:gold_coin",
+    { "tag": "minecraft:head_armor",          "emeralds": 65, "currency": "economy_core:gold_coin","xp": 8,
       "scale_durability": true, "enchant_per_level": 1 },
-    { "tag": "minecraft:leg_armor",           "emeralds": 40, "currency": "economy_core:gold_coin",
+    { "tag": "minecraft:leg_armor",           "emeralds": 70, "currency": "economy_core:gold_coin","xp": 8,
       "scale_durability": true, "enchant_per_level": 1 },
-    { "tag": "minecraft:foot_armor",          "emeralds": 30, "currency": "economy_core:gold_coin",
+    { "tag": "minecraft:foot_armor",          "emeralds": 12, "currency": "economy_core:gold_coin","xp": 8,
       "scale_durability": true, "enchant_per_level": 1 },
 
     {
       "item": "minecraft:enchanted_book",
-      "emeralds": 6,
+      "emeralds": 80,
       "currency": "economy_core:gold_coin",
       "enchant_per_level": 2,
       "enchants": { "minecraft:mending": 15, "minecraft:sharpness": 3, "minecraft:protection": 3 },
       "xp": 5
     },
 
-    { "item": "minecraft:potion", "potion": "minecraft:healing",        "emeralds": 20, "currency": "economy_core:gold_coin" },
-    { "item": "minecraft:potion", "potion": "minecraft:strong_healing", "emeralds": 50, "currency": "economy_core:gold_coin" },
-    { "item": "minecraft:potion", "emeralds": 1, "currency": "minecraft:glass_bottle" },
-    { "item": "minecraft:splash_potion", "emeralds": 30, "currency": "economy_core:gold_coin" },
+    { "item": "minecraft:potion", "potion": "minecraft:healing",        "emeralds": 50, "currency": "economy_core:gold_coin" },
+    { "item": "minecraft:potion", "potion": "minecraft:strong_healing", "emeralds": 80, "currency": "economy_core:gold_coin" },
+    { "item": "minecraft:potion", "emeralds": 30, "currency": "meconomy_core:gold_coin" },
+    { "item": "minecraft:splash_potion", "emeralds": 70, "currency": "economy_core:gold_coin" },
 
     { "all": true, "count": 1, "emeralds": 5, "currency": "economy_core:gold_coin", "priority": -100 }
   ]

@@ -17,14 +17,14 @@ public class OverrideWeaponSmith {
         TradeUtil.clear(e);
         Item coin = EcoItems.GOLD_COIN.get();
 
-        TradeUtil.add(e, 1, coin, 130, Items.IRON_AXE, 1, 12, 1);
-        TradeUtil.add(e, 2, coin, 90, Items.IRON_SWORD, 1, 12, 5);
+        TradeUtil.add(e, 1, coin, 200, Items.IRON_AXE, 1, 12, 1);
+        TradeUtil.add(e, 2, coin, 150, Items.IRON_SWORD, 1, 12, 5);
         TradeUtil.add(e, 3, coin, 120, Items.BOW, 1, 12, 10);
         TradeUtil.add(e, 3, coin, 100, Items.SHIELD, 1, 12, 10);
 
-        TradeUtil.add(e, 4, Items.EMERALD, 20, Items.DIAMOND_AXE, 1, 3, 15);
+        TradeUtil.add(e, 4, coin, 450, Items.DIAMOND_AXE, 1, 3, 15);
 
-        TradeUtil.add(e, 5, Items.EMERALD, 13, Items.DIAMOND_SWORD, 1, 3, 30);
+        TradeUtil.add(e, 5, coin, 300, Items.DIAMOND_SWORD, 1, 3, 30);
         TradeUtil.add2(e, 5, coin, 160, Items.EMERALD, 8, Items.DIAMOND_SWORD, 1, 3, 30);
     }
 }

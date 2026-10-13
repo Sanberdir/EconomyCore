@@ -25,10 +25,7 @@ import java.util.Optional;
 
 public class TraderMenu extends AbstractContainerMenu {
 
-    /** id кнопки: 0..999 — купить торг №i; 1000+i — продать партию; 2000+i — продать всё. */
-    public static final int SELL_ONE = 1_000_000;
-    public static final int SELL_ALL = 2_000_000;
-    public static final int BUY_ALL = 500_000;
+
     @Nullable
     private final EconomyTrader trader; // на клиенте null
     private final MerchantOffers offers;
@@ -104,8 +101,8 @@ public class TraderMenu extends AbstractContainerMenu {
 
         ItemCost a = offer.getItemCostA();
         Optional<ItemCost> b = offer.getItemCostB();
-        int needA = offer.getCostA().getCount();    // пересчитывается каждую сделку
-        int needB = offer.getCostB().getCount();
+        int needA = TradePricing.countA(offer);     // без лимита 64
+        int needB = b.map(ItemCost::count).orElse(0);
 
         if (count(player, a) < needA) return false;
         if (b.isPresent() && count(player, b.get()) < needB) return false;
@@ -200,25 +197,6 @@ public class TraderMenu extends AbstractContainerMenu {
             trader.playSound(SoundEvents.VILLAGER_YES, 1.0F, trader.getVoicePitch());
         }
         EconomyBank.syncInventory(player);
-    }
-
-    private static int countItem(Player player, Item item) {
-        int n = 0;
-        for (ItemStack s : player.getInventory().items) {
-            if (s.is(item)) n += s.getCount();
-        }
-        return n;
-    }
-
-    private static void removeItem(Player player, Item item, int amount) {
-        for (ItemStack s : player.getInventory().items) {
-            if (amount <= 0) break;
-            if (s.is(item)) {
-                int take = Math.min(amount, s.getCount());
-                s.shrink(take);
-                amount -= take;
-            }
-        }
     }
 
     private static void give(Player player, ItemStack stack) {
