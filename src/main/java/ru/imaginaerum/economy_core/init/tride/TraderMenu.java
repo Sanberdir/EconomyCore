@@ -4,24 +4,22 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundEvents;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.DataSlot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.Items;
+
 import net.minecraft.world.item.trading.ItemCost;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.item.trading.MerchantOffers;
+import net.neoforged.neoforge.network.PacketDistributor;
 import ru.imaginaerum.economy_core.init.economy.EconomyBank;
 import ru.imaginaerum.economy_core.init.entities.entity.EconomyTrader;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,14 +29,13 @@ public class TraderMenu extends AbstractContainerMenu {
     @Nullable
     private final EconomyTrader trader; // на клиенте null
     private final MerchantOffers offers;
-    private final List<DataSlot> uses = new ArrayList<>();
 
     /** Серверная сторона. */
     public TraderMenu(int id, Inventory inv, EconomyTrader trader) {
         super(EconomyMenus.TRADER.get(), id);
         this.trader = trader;
         this.offers = trader.getOffers();
-        initUses();
+
     }
 
     /** Клиентская сторона: список торгов приходит в буфере при открытии. */
@@ -48,7 +45,6 @@ public class TraderMenu extends AbstractContainerMenu {
         buf.readVarInt(); // id сущности, пока не нужен
         this.offers = MerchantOffers.STREAM_CODEC.decode(buf);
         this.specialization = specComponent(buf.readUtf());
-        initUses();
     }
     @Nullable
     private Component specialization;
@@ -69,14 +65,7 @@ public class TraderMenu extends AbstractContainerMenu {
     public Component getSpecialization() {
         return specialization;
     }
-    private void initUses() {
-        for (MerchantOffer offer : offers) {
-            DataSlot slot = DataSlot.standalone();
-            slot.set(offer.getUses());
-            addDataSlot(slot);
-            uses.add(slot);
-        }
-    }
+
     public static int encode(boolean sell, int qty, int index) {
         return ((sell ? 1000 : 0) + Mth.clamp(qty, 1, 999)) * 1000 + index;
     }
@@ -85,7 +74,13 @@ public class TraderMenu extends AbstractContainerMenu {
     }
 
     public int getUses(int index) {
-        return uses.get(index).get();
+        return index < offers.size() ? offers.get(index).getUses() : 0;
+    }
+
+    /** Клиент: подменяет список торгов на свежий. */
+    public void replaceOffers(MerchantOffers fresh) {
+        offers.clear();
+        offers.addAll(fresh);
     }
 
     // ---------- Обработка кнопок (сервер) ----------
@@ -133,7 +128,6 @@ public class TraderMenu extends AbstractContainerMenu {
 
         int villagerUses = trader.onOfferTraded(index, player);
         syncUses(offer, villagerUses >= 0 ? villagerUses : offer.getUses() + 1);
-        uses.get(index).set(offer.getUses());
 
         give(player, offer.getResult().copy());
         return true;
@@ -186,7 +180,8 @@ public class TraderMenu extends AbstractContainerMenu {
         if (batches <= 0) return false;
 
         removeSame(player, proto, batches * q.count());
-        EconomyBank.giveCurrency(player, q.currency(), batches * q.amount());
+        trader.addBuyback(proto, batches * q.count());
+        EconomyBank.credit(player, q.currency(), batches * q.amount());
         trader.spawnSellXp(batches * q.xp());
 
         afterTrade(player);
@@ -213,9 +208,12 @@ public class TraderMenu extends AbstractContainerMenu {
     }
 
     private void afterTrade(Player player) {
-        // player.awardStat(Stats.TRADED_WITH_VILLAGER);  <- удалить
         if (trader != null) {
-            trader.playSound(SoundEvents.VILLAGER_YES, 1.0F, trader.getVoicePitch());
+            trader.playSound(trader.getNotifyTradeSound(), 1.0F, trader.getVoicePitch());
+            trader.refreshNow(player);   // пересобрать торги, включая выкуп
+            if (player instanceof ServerPlayer sp) {
+                PacketDistributor.sendToPlayer(sp, new SyncOffersPayload(containerId, offers));
+            }
         }
         EconomyBank.syncInventory(player);
     }

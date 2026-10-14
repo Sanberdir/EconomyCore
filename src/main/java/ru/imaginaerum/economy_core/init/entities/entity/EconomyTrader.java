@@ -3,17 +3,21 @@ package ru.imaginaerum.economy_core.init.entities.entity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.stats.Stats;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.*;
@@ -34,16 +38,19 @@ import net.minecraft.world.entity.npc.VillagerProfession;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.trading.ItemCost;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.item.trading.MerchantOffers;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.phys.AABB;
 import ru.imaginaerum.economy_core.init.tride.TraderMenu;
+import ru.imaginaerum.economy_core.init.tride.TraderPrices;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class EconomyTrader extends AbstractVillager {
 
@@ -52,7 +59,8 @@ public class EconomyTrader extends AbstractVillager {
     private static final int WANDER_RADIUS = 32;
     private static final int REFRESH_INTERVAL = 200; // тиков
     private record Source(java.util.UUID villager, int index) {}
-
+    private static final double BUYBACK_MARKUP = 1.5D;
+    private static final int MAX_BUYBACK = 60;
     private final List<Source> sources = new ArrayList<>();
     @Nullable
     private BlockPos homePos;
@@ -60,10 +68,77 @@ public class EconomyTrader extends AbstractVillager {
 
     public EconomyTrader(EntityType<? extends AbstractVillager> type, Level level) {
         super(type, level);
+        this.setInvulnerable(true);
+    }
+
+    private static final class Buyback {
+        final ItemStack proto;   // стек из 1 штуки, с компонентами (прочность, чары)
+        int amount;
+        Buyback(ItemStack proto, int amount) { this.proto = proto; this.amount = amount; }
+    }
+
+    private final List<Buyback> buyback = new ArrayList<>();
+    private final List<Buyback> buybackView = new ArrayList<>();   // что показано в окне сейчас
+    public void refreshNow(Player player) {
+        if (this.level() instanceof ServerLevel sl) {
+            refreshOffers(sl, player);
+        }
+    }
+    /** Вызывается при продаже игроком. */
+    public void addBuyback(ItemStack proto, int amount) {
+        for (Buyback b : buyback) {
+            if (ItemStack.isSameItemSameComponents(b.proto, proto)) {
+                b.amount += amount;
+                return;
+            }
+        }
+        buyback.add(new Buyback(proto.copyWithCount(1), amount));
+        if (buyback.size() > MAX_BUYBACK) buyback.remove(0);   // самое старое пропадает
+    }
+
+    private void appendBuyback(MerchantOffers offers) {
+        buybackView.clear();
+        for (Buyback b : buyback) {
+            TraderPrices.Quote q = TraderPrices.quote(b.proto);
+            if (q == null) continue;
+            int batches = b.amount / q.count();
+            if (batches <= 0) continue;
+
+            int price = Math.max(1, (int) Math.ceil(q.amount() * BUYBACK_MARKUP));
+            offers.add(new MerchantOffer(
+                    new ItemCost(q.currency(), price),
+                    Optional.empty(),
+                    b.proto.copyWithCount(q.count()),
+                    0, batches, 0, 0f, 0));
+            buybackView.add(b);
+        }
     }
     @Nullable
     private VillagerProfession specialization;   // null + chosen = универсальный
     private boolean specializationChosen = false;
+    @Override
+    public boolean canBeSeenAsEnemy() {
+        return false;
+    }
+    @Override
+    protected SoundEvent getAmbientSound() {
+        return SoundEvents.WANDERING_TRADER_AMBIENT;
+    }
+
+    @Override
+    protected SoundEvent getHurtSound(DamageSource source) {
+        return SoundEvents.WANDERING_TRADER_HURT;
+    }
+
+    @Override
+    protected SoundEvent getDeathSound() {
+        return SoundEvents.WANDERING_TRADER_DEATH;
+    }
+
+    @Override
+    protected SoundEvent getTradeUpdatedSound(boolean isYesSound) {
+        return isYesSound ? SoundEvents.WANDERING_TRADER_YES : SoundEvents.WANDERING_TRADER_NO;
+    }
 
     @Nullable
     public VillagerProfession getSpecialization() {
@@ -135,14 +210,15 @@ public class EconomyTrader extends AbstractVillager {
         this.goalSelector.addGoal(0, new FloatGoal(this));
         this.goalSelector.addGoal(1, new TradeWithPlayerGoal(this));
         this.goalSelector.addGoal(2, new LookAtTradingPlayerGoal(this));
-        this.goalSelector.addGoal(3, new MoveTowardsRestrictionGoal(this, 0.35D));
-        this.goalSelector.addGoal(4, new WaterAvoidingRandomStrollGoal(this, 0.35D));
-        this.goalSelector.addGoal(5, new LookAtPlayerGoal(this, Player.class, 8.0F));
-        this.goalSelector.addGoal(6, new RandomLookAroundGoal(this));
+        this.goalSelector.addGoal(3, new LookAtPlayerGoal(this, Player.class, 8.0F));
+        this.goalSelector.addGoal(4, new RandomLookAroundGoal(this));
     }
 
     // ---------- Взаимодействие ----------
-
+    @Override
+    public boolean isPushable() {
+        return false;
+    }
     @Override
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         System.out.println("[Trader] mobInteract called, hand=" + hand
@@ -274,6 +350,7 @@ public class EconomyTrader extends AbstractVillager {
                 }
             }
         }
+        appendBuyback(offers);
         System.out.println("[Trader] bed=" + this.homePos + ", villagers=" + villagers.size()
                 + ", offers=" + offers.size());
     }
@@ -313,13 +390,29 @@ public class EconomyTrader extends AbstractVillager {
 
     /** Можно ли сейчас совершить сделку: житель жив и у него есть запас. */
     public boolean canTrade(int index) {
+        if (index >= sources.size()) {
+            int k = index - sources.size();
+            return k < buybackView.size() && buybackView.get(k).amount > 0;
+        }
         MerchantOffer orig = findSourceOffer(index, null);
         return orig != null && !orig.isOutOfStock();
     }
 
+
     /** Вызывается после оплаты: прокачивает исходного жителя. Возвращает его актуальное число использований. */
     /** Вызывается после оплаты: прокачивает исходного жителя. Возвращает его актуальное число использований. */
     public int onOfferTraded(int index, Player player) {
+        // Лот выкупа: уменьшаем склад
+        if (index >= sources.size()) {
+            int k = index - sources.size();
+            if (k < 0 || k >= buybackView.size()) return -1;
+            Buyback b = buybackView.get(k);
+            TraderPrices.Quote q = TraderPrices.quote(b.proto);
+            b.amount -= (q == null ? 1 : q.count());
+            if (b.amount <= 0) buyback.remove(b);
+            return this.getOffers().get(index).getUses() + 1;
+        }
+
         Villager[] holder = new Villager[1];
         MerchantOffer orig = findSourceOffer(index, holder);
         if (orig == null) return -1;
@@ -337,7 +430,7 @@ public class EconomyTrader extends AbstractVillager {
             int xp = 0;
             for (ExperienceOrb orb : sl.getEntitiesOfClass(ExperienceOrb.class,
                     v.getBoundingBox().inflate(1.0D, 1.5D, 1.0D),
-                    o -> o.tickCount == 0)) {      // только что созданные
+                    o -> o.tickCount == 0)) {
                 xp += orb.getValue();
                 orb.discard();
             }
@@ -400,7 +493,7 @@ public class EconomyTrader extends AbstractVillager {
 
     @Override
     public SoundEvent getNotifyTradeSound() {
-        return SoundEvents.VILLAGER_YES;
+        return SoundEvents.WANDERING_TRADER_YES;
     }
 
     @Nullable
@@ -418,12 +511,18 @@ public class EconomyTrader extends AbstractVillager {
         if (this.specialization != null) {
             tag.putString("Specialization",
                     BuiltInRegistries.VILLAGER_PROFESSION.getKey(this.specialization).toString());
-            System.out.println("[Trader] specialization chosen: "
-                    + (specialization == null ? "UNIVERSAL" : specialization));
         }
         if (this.homePos != null) {
             tag.putIntArray("Home", new int[]{homePos.getX(), homePos.getY(), homePos.getZ()});
         }
+        ListTag list = new ListTag();
+        for (Buyback b : buyback) {
+            CompoundTag t = new CompoundTag();
+            t.put("Item", b.proto.save(this.registryAccess()));
+            t.putInt("Amount", b.amount);
+            list.add(t);
+        }
+        tag.put("Buyback", list);
         tag.putLong("LastRestockDay", this.lastRestockDay);
     }
 
@@ -442,6 +541,15 @@ public class EconomyTrader extends AbstractVillager {
         if (home.length == 3) {
             this.homePos = new BlockPos(home[0], home[1], home[2]);
             this.restrictTo(this.homePos, WANDER_RADIUS);
+        }
+        buyback.clear();
+        ListTag list = tag.getList("Buyback", Tag.TAG_COMPOUND);
+        for (int i = 0; i < list.size(); i++) {
+            CompoundTag t = list.getCompound(i);
+            Tag item = t.get("Item");
+            if (item == null) continue;
+            ItemStack.parse(this.registryAccess(), item)
+                    .ifPresent(s -> buyback.add(new Buyback(s, t.getInt("Amount"))));
         }
         this.lastRestockDay = tag.contains("LastRestockDay") ? tag.getLong("LastRestockDay") : -1L;
     }

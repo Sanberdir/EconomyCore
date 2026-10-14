@@ -27,4 +27,5 @@ public class EconomyAttachments {
                     .sync(ByteBufCodecs.VAR_INT)
                     .copyOnDeath()
                     .build());
+
 }

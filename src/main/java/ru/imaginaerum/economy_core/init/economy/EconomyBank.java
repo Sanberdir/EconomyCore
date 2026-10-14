@@ -167,7 +167,15 @@ public final class EconomyBank {
             left -= n;
         }
     }
-
+    public static void credit(Player p, Item item, int amount) {
+        if (amount <= 0) return;
+        if (!isCurrency(item)) {
+            giveCurrency(p, item, amount);
+            return;
+        }
+        setBalance(p, item, (long) balance(p, item) + amount);
+        feedback(p, Component.translatable("message.economy_core.to_account", amount, item.getDescription()));
+    }
     /** Кладёт в инвентарь; что не влезло, выбрасывает перед игроком. */
     public static void giveOrDrop(Player p, ItemStack stack) {
         if (stack.isEmpty()) return;

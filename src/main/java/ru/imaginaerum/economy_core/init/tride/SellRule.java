@@ -102,7 +102,7 @@ public record SellRule(
             ExtraCodecs.NON_NEGATIVE_INT.optionalFieldOf("enchant_per_level", 0).forGetter(SellRule::enchantPerLevel),
             Codec.unboundedMap(ResourceLocation.CODEC, ExtraCodecs.NON_NEGATIVE_INT)
                     .optionalFieldOf("enchants", Map.of()).forGetter(SellRule::enchants),
-            Codec.BOOL.optionalFieldOf("scale_durability", false).forGetter(SellRule::scaleDurability),
+            Codec.BOOL.optionalFieldOf("scale_durability", true).forGetter(SellRule::scaleDurability),
             Codec.INT.optionalFieldOf("priority", 0).forGetter(SellRule::priority),
             Codec.BOOL.optionalFieldOf("deny", false).forGetter(SellRule::deny),
             BuiltInRegistries.ITEM.holderByNameCodec().optionalFieldOf("currency").forGetter(SellRule::currency)
