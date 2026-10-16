@@ -44,26 +44,6 @@ public class TraderMenu extends AbstractContainerMenu {
         this.trader = null;
         buf.readVarInt(); // id сущности, пока не нужен
         this.offers = MerchantOffers.STREAM_CODEC.decode(buf);
-        this.specialization = specComponent(buf.readUtf());
-    }
-    @Nullable
-    private Component specialization;
-    @Nullable
-    private static Component specComponent(String key) {
-        if (key.isEmpty()) return null;
-        if (key.equals("universal")) {
-            return Component.translatable("gui.economy_core.trader.universal");
-        }
-        ResourceLocation id = ResourceLocation.tryParse(key);
-        if (id == null) return null;
-        String path = id.getNamespace().equals("minecraft")
-                ? id.getPath()
-                : id.getNamespace() + "." + id.getPath();
-        return Component.translatable("entity.minecraft.villager." + path);
-    }
-    @Nullable
-    public Component getSpecialization() {
-        return specialization;
     }
 
     public static int encode(boolean sell, int qty, int index) {

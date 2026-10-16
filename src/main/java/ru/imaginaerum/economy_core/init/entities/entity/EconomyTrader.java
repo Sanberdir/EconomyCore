@@ -70,7 +70,13 @@ public class EconomyTrader extends AbstractVillager {
         super(type, level);
         this.setInvulnerable(true);
     }
+    @Nullable
+    private BlockPos tentPos;
 
+    @Nullable
+    public BlockPos getTentPos() { return tentPos; }
+
+    public void setTentPos(@Nullable BlockPos pos) { this.tentPos = pos; }
     private static final class Buyback {
         final ItemStack proto;   // стек из 1 штуки, с компонентами (прочность, чары)
         int amount;
@@ -113,9 +119,7 @@ public class EconomyTrader extends AbstractVillager {
             buybackView.add(b);
         }
     }
-    @Nullable
-    private VillagerProfession specialization;   // null + chosen = универсальный
-    private boolean specializationChosen = false;
+
     @Override
     public boolean canBeSeenAsEnemy() {
         return false;
@@ -140,69 +144,19 @@ public class EconomyTrader extends AbstractVillager {
         return isYesSound ? SoundEvents.WANDERING_TRADER_YES : SoundEvents.WANDERING_TRADER_NO;
     }
 
-    @Nullable
-    public VillagerProfession getSpecialization() {
-        return specialization;
-    }
 
-    public boolean isUniversal() {
-        return specializationChosen && specialization == null;
-    }
 
-    /** Выбирает специализацию из профессий, которые есть в деревне, либо «универсальный». */
-    private void chooseSpecialization(List<Villager> all) {
-        if (all.isEmpty()) return;   // некого выбирать, решим при следующем обновлении
 
-        if (specializationChosen) {
-            if (specialization == null) return;   // универсальный остаётся
-            boolean stillPresent = false;
-            for (Villager v : all) {
-                if (v.getVillagerData().getProfession() == specialization) {
-                    stillPresent = true;
-                    break;
-                }
-            }
-            if (stillPresent) return;
-        }
-
-        List<VillagerProfession> pool = new ArrayList<>();
-        for (Villager v : all) {
-            VillagerProfession p = v.getVillagerData().getProfession();
-            if (!pool.contains(p)) pool.add(p);
-        }
-        pool.add(null);   // null = универсальный
-
-        this.specialization = pool.get(this.random.nextInt(pool.size()));
-        this.specializationChosen = true;
-    }
     public static AttributeSupplier.Builder createTraderAttributes() {
         return Mob.createMobAttributes()
                 .add(Attributes.MOVEMENT_SPEED, 0.5D)
                 .add(Attributes.FOLLOW_RANGE, 48.0D);
-    }
-    /** "" — ещё не выбрана, "universal" — универсальный, иначе id профессии. */
-    public String getSpecializationKey() {
-        if (!specializationChosen) return "";
-        if (specialization == null) return "universal";
-        return BuiltInRegistries.VILLAGER_PROFESSION.getKey(specialization).toString();
-    }
-
-    /** Выдаёт случайную профессию, если её ещё нет. */
-    private void ensureSpecialization() {
-        if (this.specializationChosen || this.specialization != null) return;
-        List<VillagerProfession> pool = BuiltInRegistries.VILLAGER_PROFESSION.stream()
-                .filter(p -> p != VillagerProfession.NONE && p != VillagerProfession.NITWIT)
-                .toList();
-        if (!pool.isEmpty()) {
-            this.specialization = pool.get(this.random.nextInt(pool.size()));
-        }
     }
 
     @Nullable
     @Override
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty,
                                         MobSpawnType type, @Nullable SpawnGroupData data) {
-        ensureSpecialization();
         return super.finalizeSpawn(level, difficulty, type, data);
     }
     @Override
@@ -249,7 +203,6 @@ public class EconomyTrader extends AbstractVillager {
                         buf -> {
                             buf.writeVarInt(this.getId());
                             MerchantOffers.STREAM_CODEC.encode(buf, this.getOffers());
-                            buf.writeUtf(this.getSpecializationKey());
                         });
                 System.out.println("[Trader] menu opened: " + opened.isPresent());
 
@@ -284,7 +237,6 @@ public class EconomyTrader extends AbstractVillager {
     // ---------- Сбор торгов деревни ----------
 
     private void refreshOffers(ServerLevel level, @Nullable Player player) {
-        ensureSpecialization();
         // 1. Кровать = центр деревни
         if (this.homePos == null || !level.getBlockState(this.homePos).is(BlockTags.BEDS)) {
             this.homePos = level.getPoiManager()
@@ -309,14 +261,10 @@ public class EconomyTrader extends AbstractVillager {
                         && v.getVillagerData().getProfession() != VillagerProfession.NONE
                         && v.getVillagerData().getProfession() != VillagerProfession.NITWIT);
 
-        chooseSpecialization(all);
-
-        List<Villager> villagers = isUniversal()
-                ? all
-                : all.stream()
-                .filter(v -> v.getVillagerData().getProfession() == this.specialization)
-                .toList();
-
+        List<Villager> villagers = level.getEntitiesOfClass(Villager.class, box, v ->
+                v.isAlive() && !v.isBaby()
+                        && v.getVillagerData().getProfession() != VillagerProfession.NONE
+                        && v.getVillagerData().getProfession() != VillagerProfession.NITWIT);
         for (Villager villager : villagers) {
             MerchantOffers vo = villager.getOffers(); // сам сгенерирует торги, если их нет
             for (int i = 0; i < vo.size(); i++) {
@@ -507,13 +455,11 @@ public class EconomyTrader extends AbstractVillager {
     @Override
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
-        tag.putBoolean("SpecChosen", this.specializationChosen);
-        if (this.specialization != null) {
-            tag.putString("Specialization",
-                    BuiltInRegistries.VILLAGER_PROFESSION.getKey(this.specialization).toString());
-        }
         if (this.homePos != null) {
             tag.putIntArray("Home", new int[]{homePos.getX(), homePos.getY(), homePos.getZ()});
+        }
+        if (this.tentPos != null) {
+            tag.putIntArray("Tent", new int[]{tentPos.getX(), tentPos.getY(), tentPos.getZ()});
         }
         ListTag list = new ListTag();
         for (Buyback b : buyback) {
@@ -530,17 +476,13 @@ public class EconomyTrader extends AbstractVillager {
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
         int[] home = tag.getIntArray("Home");
-        this.specializationChosen = tag.getBoolean("SpecChosen");
-        if (tag.contains("Specialization")) {
-            ResourceLocation id = ResourceLocation.tryParse(tag.getString("Specialization"));
-            if (id != null) {
-                BuiltInRegistries.VILLAGER_PROFESSION.getOptional(id)
-                        .ifPresent(p -> this.specialization = p);
-            }
-        }
         if (home.length == 3) {
             this.homePos = new BlockPos(home[0], home[1], home[2]);
             this.restrictTo(this.homePos, WANDER_RADIUS);
+        }
+        int[] tent = tag.getIntArray("Tent");
+        if (tent.length == 3) {
+            this.tentPos = new BlockPos(tent[0], tent[1], tent[2]);
         }
         buyback.clear();
         ListTag list = tag.getList("Buyback", Tag.TAG_COMPOUND);

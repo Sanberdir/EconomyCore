@@ -189,16 +189,7 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
         rightEdge = drawBalance(g, EMERALD,
                 String.valueOf(EconomyBank.total(minecraft.player, Items.EMERALD)), rightEdge, y + 3);
         rightEdge -= 10;
-        Component spec = menu.getSpecialization();
-        if (spec != null) {
-            int sx = x + 8 + font.width(title) + 6;
-            int avail = rightEdge - 6 - sx;
-            if (avail > 20) {
-                g.drawString(font,
-                        font.plainSubstrByWidth("· " + spec.getString(), avail),
-                        sx, y + 5, 0xFFD700);
-            }
-        }
+
         drawBalance(g, new ItemStack(EcoItems.GOLD_COIN.get()),
                 String.valueOf(EconomyBank.total(minecraft.player, EcoItems.GOLD_COIN.get())), rightEdge, y + 3);
 

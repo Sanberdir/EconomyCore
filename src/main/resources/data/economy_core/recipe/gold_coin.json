@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "group": "iron_ingot",
+  "ingredients": [
+    {
+      "item": "economy_core:pile_of_gold"
+    }
+  ],
+  "result": {
+    "count": 9,
+    "id": "economy_core:gold_coin"
+  }
+}

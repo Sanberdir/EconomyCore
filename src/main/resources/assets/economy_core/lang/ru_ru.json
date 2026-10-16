@@ -1,6 +1,7 @@
 {
   "entity.economy_core.trader": "Торговец",
   "item.economy_core.gold_coin": "Золотая монета",
+  "block.economy_core.pile_of_gold": "Груда золота",
 
   "gui.economy_core.trader.buy": "Купить",
   "gui.economy_core.trader.sell": "Продать",

@@ -4,6 +4,7 @@
   "package": "ru.imaginaerum.economy_core.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "AbstractVillagerMixin"
   ],
   "client": [
   ],

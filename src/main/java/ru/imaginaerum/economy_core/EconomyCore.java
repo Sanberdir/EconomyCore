@@ -34,6 +34,7 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import org.slf4j.Logger;
+import ru.imaginaerum.economy_core.init.blocks.EcoBlocks;
 import ru.imaginaerum.economy_core.init.economy.EconomyAttachments;
 import ru.imaginaerum.economy_core.init.entities.EconomyEntities;
 import ru.imaginaerum.economy_core.init.entities.entity.EconomyTrader;
@@ -59,6 +60,7 @@ public class EconomyCore {
         EconomyMenus.MENUS.register(modEventBus);
         NeoForge.EVENT_BUS.register(this);
         EcoItems.ITEMS.register(modEventBus);
+        EcoBlocks.BLOCKS.register(modEventBus);
 
         EconomyAttachments.ATTACHMENTS.register(modEventBus);
         // Register our mod's ModConfigSpec so that FML can create and load the config file for us

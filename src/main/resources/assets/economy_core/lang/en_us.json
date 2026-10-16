@@ -1,6 +1,7 @@
 {
   "entity.economy_core.trader": "Trader",
   "item.economy_core.gold_coin": "Gold Coin",
+  "block.economy_core.pile_of_gold": "Pile of Gold",
 
   "gui.economy_core.trader.buy": "Buy",
   "gui.economy_core.trader.sell": "Sell",
