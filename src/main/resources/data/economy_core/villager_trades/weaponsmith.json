@@ -1,0 +1,38 @@
+{"trades":[
+  {"level":1,"price":"economy_core:gold_coin*200","result":"minecraft:iron_axe","max_uses":12,"xp":1},
+  {"level":1,"price":"economy_core:gold_coin*60","result":"minecraft:stone_sword","max_uses":16,"xp":1},
+  {"level":1,"price":"economy_core:gold_coin*70","result":"minecraft:stone_axe","max_uses":16,"xp":1},
+  {"level":1,"price":"economy_core:gold_coin*40","result":"minecraft:arrow*16","max_uses":16,"xp":1},
+  {"level":1,"price":"economy_core:gold_coin*30","price2":"minecraft:emerald*2","result":"minecraft:arrow*32","max_uses":12,"xp":1},
+  {"level":1,"price":"economy_core:gold_coin*90","result":"minecraft:iron_helmet","max_uses":12,"xp":2},
+
+  {"level":2,"price":"economy_core:gold_coin*150","result":"minecraft:iron_sword","max_uses":12,"xp":5},
+  {"level":2,"price":"economy_core:gold_coin*180","result":"minecraft:iron_chestplate","max_uses":8,"xp":5},
+  {"level":2,"price":"economy_core:gold_coin*130","result":"minecraft:iron_leggings","max_uses":8,"xp":5},
+  {"level":2,"price":"economy_core:gold_coin*80","result":"minecraft:iron_boots","max_uses":8,"xp":5},
+  {"level":2,"price":"economy_core:gold_coin*120","result":"minecraft:spectral_arrow*16","max_uses":12,"xp":4},
+  {"level":2,"price":"economy_core:gold_coin*110","result":"minecraft:golden_sword","max_uses":12,"xp":4},
+
+  {"level":3,"price":"economy_core:gold_coin*120","result":"minecraft:bow","max_uses":12,"xp":10},
+  {"level":3,"price":"economy_core:gold_coin*100","result":"minecraft:shield","max_uses":12,"xp":10},
+  {"level":3,"price":"economy_core:gold_coin*160","result":"minecraft:crossbow","max_uses":8,"xp":10},
+  {"level":3,"price":"economy_core:gold_coin*250","type":"enchanted_item","result":"minecraft:iron_sword","min_level":5,"max_level":19,"max_uses":6,"xp":12},
+  {"level":3,"price":"economy_core:gold_coin*220","type":"enchanted_item","result":"minecraft:iron_axe","min_level":5,"max_level":19,"max_uses":6,"xp":12},
+  {"level":3,"price":"economy_core:gold_coin*260","type":"enchanted_item","result":"minecraft:iron_chestplate","min_level":5,"max_level":19,"max_uses":6,"xp":12},
+  {"level":3,"price":"economy_core:gold_coin*80","price2":"minecraft:emerald*4","result":"minecraft:fire_charge*4","max_uses":8,"xp":6},
+
+  {"level":4,"price":"economy_core:gold_coin*450","result":"minecraft:diamond_axe","max_uses":3,"xp":15},
+  {"level":4,"price":"economy_core:gold_coin*420","result":"minecraft:diamond_helmet","max_uses":3,"xp":15},
+  {"level":4,"price":"economy_core:gold_coin*400","result":"minecraft:diamond_boots","max_uses":3,"xp":15},
+  {"level":4,"price":"economy_core:gold_coin*500","type":"enchanted_item","result":"minecraft:bow","min_level":10,"max_level":25,"max_uses":4,"xp":18},
+  {"level":4,"price":"economy_core:gold_coin*520","type":"enchanted_item","result":"minecraft:crossbow","min_level":10,"max_level":25,"max_uses":4,"xp":18},
+  {"level":4,"price":"economy_core:gold_coin*350","price2":"minecraft:emerald*6","type":"enchanted_item","result":"minecraft:shield","min_level":10,"max_level":25,"max_uses":4,"xp":18},
+
+  {"level":5,"price":"economy_core:gold_coin*300","result":"minecraft:diamond_sword","max_uses":3,"xp":30},
+  {"level":5,"price":"economy_core:gold_coin*160","price2":"minecraft:emerald*8","result":"minecraft:diamond_sword","max_uses":3,"xp":30},
+  {"level":5,"price":"economy_core:gold_coin*700","result":"minecraft:diamond_chestplate","max_uses":2,"xp":30},
+  {"level":5,"price":"economy_core:gold_coin*600","result":"minecraft:diamond_leggings","max_uses":2,"xp":30},
+  {"level":5,"price":"economy_core:gold_coin*900","type":"enchanted_item","result":"minecraft:diamond_sword","min_level":20,"max_level":39,"max_uses":2,"xp":40},
+  {"level":5,"price":"economy_core:gold_coin*850","type":"enchanted_item","result":"minecraft:diamond_axe","min_level":20,"max_level":39,"max_uses":2,"xp":40},
+  {"level":5,"price":"economy_core:gold_coin*1000","type":"enchanted_item","result":"minecraft:diamond_chestplate","min_level":20,"max_level":39,"max_uses":2,"xp":40}
+]}

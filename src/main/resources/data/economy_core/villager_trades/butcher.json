@@ -1,0 +1,20 @@
+{"trades":[
+  {"level":1,"price":"economy_core:gold_coin*80","result":"minecraft:cooked_chicken*5","max_uses":16,"xp":1},
+  {"level":1,"price":"economy_core:gold_coin*25","result":"minecraft:beef*6","max_uses":16,"xp":2},
+  {"level":1,"price":"economy_core:gold_coin*20","result":"minecraft:chicken*6","max_uses":16,"xp":2},
+
+  {"level":2,"price":"economy_core:gold_coin*100","result":"minecraft:cooked_porkchop*5","max_uses":16,"xp":5},
+  {"level":2,"price":"economy_core:gold_coin*40","result":"minecraft:porkchop*6","max_uses":16,"xp":6},
+  {"level":2,"price":"economy_core:gold_coin*35","result":"minecraft:mutton*6","max_uses":16,"xp":6},
+
+  {"level":3,"price":"economy_core:gold_coin*100","result":"minecraft:cooked_mutton*5","max_uses":16,"xp":5},
+  {"level":3,"price":"economy_core:gold_coin*45","result":"minecraft:rabbit*4","max_uses":16,"xp":8},
+  {"level":3,"price":"economy_core:gold_coin*50","result":"minecraft:cooked_chicken*4","max_uses":16,"xp":8},
+
+  {"level":4,"price":"economy_core:gold_coin*95","result":"minecraft:cooked_beef*5","max_uses":12,"xp":10},
+  {"level":4,"price":"economy_core:gold_coin*100","result":"minecraft:rabbit_stew*2","max_uses":12,"xp":15},
+  {"level":4,"price":"economy_core:gold_coin*60","result":"minecraft:cooked_mutton*4","max_uses":12,"xp":12},
+
+  {"level":5,"price":"economy_core:gold_coin*120","result":"minecraft:rabbit_stew*3","max_uses":8,"xp":30},
+  {"level":5,"price":"economy_core:gold_coin*65","result":"minecraft:cooked_porkchop*4","max_uses":12,"xp":15}
+]}

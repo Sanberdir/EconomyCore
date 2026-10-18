@@ -1,0 +1,34 @@
+{"trades":[
+  {"level":1,"price":"economy_core:gold_coin*20","result":"minecraft:paper*8","max_uses":16,"xp":1},
+  {"level":1,"price":"economy_core:gold_coin*80","result":"minecraft:bookshelf","max_uses":12,"xp":1},
+  {"level":1,"price":"economy_core:gold_coin*60","result":"minecraft:book*2","max_uses":16,"xp":2},
+  {"level":1,"price":"economy_core:gold_coin*40","result":"minecraft:writable_book","max_uses":12,"xp":2},
+  {"level":1,"type":"enchanted_book","price":"economy_core:gold_coin*500","min_level":1,"max_level":1,"max_uses":12,"xp":3,"exclude":["minecraft:mending"]},
+
+  {"level":2,"price":"economy_core:gold_coin*50","result":"minecraft:lantern","max_uses":12,"xp":5},
+  {"level":2,"price":"economy_core:gold_coin*60","result":"minecraft:book","max_uses":12,"xp":3},
+  {"level":2,"price":"economy_core:gold_coin*120","result":"minecraft:ink_sac*8","max_uses":12,"xp":5},
+  {"level":2,"price":"economy_core:gold_coin*180","result":"minecraft:bookshelf*2","max_uses":12,"xp":5},
+  {"level":2,"type":"enchanted_book","price":"economy_core:gold_coin*450","min_level":1,"max_level":2,"max_uses":12,"xp":8,"exclude":["minecraft:mending"]},
+
+  {"level":3,"price":"economy_core:gold_coin*40","result":"minecraft:glass*4","max_uses":12,"xp":10},
+  {"level":3,"price":"economy_core:gold_coin*300","result":"minecraft:map","max_uses":12,"xp":8},
+  {"level":3,"price":"economy_core:gold_coin*200","result":"minecraft:writable_book*4","max_uses":12,"xp":10},
+  {"level":3,"price":"economy_core:gold_coin*250","result":"minecraft:lectern","max_uses":12,"xp":10},
+  {"level":3,"type":"enchanted_book","price":"economy_core:gold_coin*450","min_level":1,"max_level":3,"max_uses":10,"xp":14},
+  {"level":3,"type":"enchanted_book","price":"economy_core:gold_coin*700","min_level":2,"max_level":4,"max_uses":6,"xp":14},
+
+  {"level":4,"price":"economy_core:gold_coin*125","result":"minecraft:clock","max_uses":12,"xp":15},
+  {"level":4,"price":"economy_core:gold_coin*200","result":"minecraft:compass","max_uses":12,"xp":15},
+  {"level":4,"price":"economy_core:gold_coin*320","result":"minecraft:name_tag","max_uses":8,"xp":12},
+  {"level":4,"price":"economy_core:gold_coin*400","result":"minecraft:bookshelf*4","max_uses":12,"xp":15},
+  {"level":4,"type":"enchanted_book","price":"economy_core:gold_coin*700","min_level":2,"max_level":4,"max_uses":6,"xp":20},
+  {"level":4,"type":"enchanted_book","price":"minecraft:emerald*45","min_level":3,"max_level":5,"max_uses":4,"xp":20},
+
+  {"level":5,"price":"economy_core:gold_coin*500","result":"minecraft:enchanting_table","max_uses":4,"xp":30},
+  {"level":5,"price":"economy_core:gold_coin*50","result":"minecraft:experience_bottle","max_uses":8,"xp":30},
+  {"level":5,"price":"economy_core:gold_coin*350","result":"minecraft:bookshelf*6","max_uses":8,"xp":30},
+  {"level":5,"price":"economy_core:gold_coin*600","result":"minecraft:name_tag*4","max_uses":6,"xp":30},
+  {"level":5,"type":"enchanted_book","price":"economy_core:gold_coin*480","min_level":3,"max_level":5,"max_uses":4,"xp":30},
+  {"level":5,"type":"enchanted_book","price":"economy_core:gold_coin*580","price2":"minecraft:emerald*10","min_level":4,"max_level":5,"max_uses":3,"xp":30}
+]}

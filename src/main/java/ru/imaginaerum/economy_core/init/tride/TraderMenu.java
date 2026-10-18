@@ -25,10 +25,10 @@ import java.util.Optional;
 
 public class TraderMenu extends AbstractContainerMenu {
 
-
+    private static final double BUYBACK_MULT = 2.25;
     @Nullable
     private final EconomyTrader trader; // на клиенте null
-    private final MerchantOffers offers;
+    private MerchantOffers offers;
 
     /** Серверная сторона. */
     public TraderMenu(int id, Inventory inv, EconomyTrader trader) {
@@ -190,7 +190,8 @@ public class TraderMenu extends AbstractContainerMenu {
     private void afterTrade(Player player) {
         if (trader != null) {
             trader.playSound(trader.getNotifyTradeSound(), 1.0F, trader.getVoicePitch());
-            trader.refreshNow(player);   // пересобрать торги, включая выкуп
+            trader.refreshNow(player);
+            this.offers = trader.getOffers();   // брать актуальный список после пересборки
             if (player instanceof ServerPlayer sp) {
                 PacketDistributor.sendToPlayer(sp, new SyncOffersPayload(containerId, offers));
             }

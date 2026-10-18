@@ -1,0 +1,22 @@
+{"trades":[
+  {"level":1,"price":"economy_core:gold_coin*30","result":"minecraft:redstone","max_uses":16,"xp":1},
+  {"level":1,"price":"economy_core:gold_coin*25","result":"minecraft:gunpowder*2","max_uses":16,"xp":2},
+  {"level":1,"price":"economy_core:gold_coin*20","result":"minecraft:rotten_flesh*4","max_uses":16,"xp":2},
+
+  {"level":2,"price":"economy_core:gold_coin*40","result":"minecraft:lapis_lazuli","max_uses":12,"xp":5},
+  {"level":2,"price":"economy_core:gold_coin*60","result":"minecraft:glowstone_dust*2","max_uses":12,"xp":6},
+  {"level":2,"price":"economy_core:gold_coin*50","result":"minecraft:sugar*4","max_uses":12,"xp":6},
+
+  {"level":3,"price":"economy_core:gold_coin*80","result":"minecraft:glowstone","max_uses":12,"xp":10},
+  {"level":3,"price":"economy_core:gold_coin*120","result":"minecraft:rabbit_foot","max_uses":12,"xp":10},
+  {"level":3,"price":"economy_core:gold_coin*150","result":"minecraft:blaze_powder*2","max_uses":12,"xp":10},
+
+  {"level":4,"price":"economy_core:gold_coin*200","result":"minecraft:ender_pearl","max_uses":12,"xp":15},
+  {"level":4,"price":"economy_core:gold_coin*180","result":"minecraft:ghast_tear","max_uses":12,"xp":15},
+  {"level":4,"price":"economy_core:gold_coin*220","result":"minecraft:sculk*4","max_uses":12,"xp":15},
+
+  {"level":5,"price":"economy_core:gold_coin*300","result":"minecraft:experience_bottle","max_uses":12,"xp":30},
+  {"level":5,"price":"economy_core:gold_coin*350","result":"minecraft:ender_eye","max_uses":8,"xp":30},
+  {"level":5,"price":"economy_core:gold_coin*400","result":"minecraft:enchanted_golden_apple","max_uses":6,"xp":30},
+  {"level":5,"price":"minecraft:emerald*20","result":"minecraft:experience_bottle","max_uses":6,"xp":30}
+]}

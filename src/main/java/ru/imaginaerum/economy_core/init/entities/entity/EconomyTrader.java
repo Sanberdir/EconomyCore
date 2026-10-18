@@ -59,7 +59,7 @@ public class EconomyTrader extends AbstractVillager {
     private static final int WANDER_RADIUS = 32;
     private static final int REFRESH_INTERVAL = 200; // тиков
     private record Source(java.util.UUID villager, int index) {}
-    private static final double BUYBACK_MARKUP = 1.5D;
+    private static final double BUYBACK_MARKUP = 2.25D;
     private static final int MAX_BUYBACK = 60;
     private final List<Source> sources = new ArrayList<>();
     @Nullable

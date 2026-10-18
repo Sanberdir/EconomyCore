@@ -1,0 +1,26 @@
+{"trades":[
+  {"level":1,"price":"economy_core:gold_coin*50","result":"minecraft:shears","max_uses":12,"xp":1},
+  {"level":1,"price":"economy_core:gold_coin*30","result":"minecraft:white_wool*6","max_uses":16,"xp":2},
+  {"level":1,"price":"economy_core:gold_coin*40","result":"minecraft:white_dye*4","max_uses":16,"xp":2},
+  {"level":1,"price":"economy_core:gold_coin*60","result":"minecraft:lead","max_uses":12,"xp":2},
+
+  {"level":2,"price":"economy_core:gold_coin*40","result":"minecraft:white_dye","max_uses":16,"xp":5},
+  {"level":2,"price":"economy_core:gold_coin*40","result":"minecraft:white_carpet","max_uses":16,"xp":5},
+  {"level":2,"price":"economy_core:gold_coin*50","result":"minecraft:black_dye*4","max_uses":16,"xp":5},
+  {"level":2,"price":"economy_core:gold_coin*60","result":"minecraft:black_wool*6","max_uses":16,"xp":5},
+
+  {"level":3,"price":"economy_core:gold_coin*80","result":"minecraft:white_bed","max_uses":12,"xp":10},
+  {"level":3,"price":"economy_core:gold_coin*90","result":"minecraft:red_bed","max_uses":12,"xp":10},
+  {"level":3,"price":"economy_core:gold_coin*100","result":"minecraft:blue_bed","max_uses":12,"xp":10},
+  {"level":3,"price":"economy_core:gold_coin*70","result":"minecraft:white_carpet*4","max_uses":12,"xp":10},
+
+  {"level":4,"price":"economy_core:gold_coin*25","result":"minecraft:white_carpet","max_uses":12,"xp":15},
+  {"level":4,"price":"economy_core:gold_coin*120","result":"minecraft:painting","max_uses":12,"xp":15},
+  {"level":4,"price":"economy_core:gold_coin*150","result":"minecraft:white_banner","max_uses":12,"xp":15},
+  {"level":4,"price":"economy_core:gold_coin*150","result":"minecraft:red_banner","max_uses":12,"xp":15},
+
+  {"level":5,"price":"economy_core:gold_coin*60","result":"minecraft:painting","max_uses":12,"xp":30},
+  {"level":5,"price":"economy_core:gold_coin*60","result":"minecraft:white_banner","max_uses":12,"xp":30},
+  {"level":5,"price":"economy_core:gold_coin*220","result":"minecraft:painting*4","max_uses":8,"xp":30},
+  {"level":5,"price":"economy_core:gold_coin*260","result":"minecraft:white_banner*4","max_uses":8,"xp":30}
+]}
