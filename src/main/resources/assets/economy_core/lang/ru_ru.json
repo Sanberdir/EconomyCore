@@ -79,5 +79,17 @@
 
   "gui.economy_core.buy.xp": "Опыт",
   "gui.economy_core.buy.auto": "авто",
-  "gui.economy_core.buy.hint": "Enter — сохранить • клик по предмету — заменить • колесо — страницы"
+  "gui.economy_core.buy.hint": "Enter — сохранить • клик по предмету — заменить • колесо — страницы",
+
+  "gui.economy_core.trader.equip": "Надетое",
+  "gui.economy_core.trader.equip.title": "Надетое снаряжение",
+  "gui.economy_core.trader.equip.none": "Ничего не надето",
+  "gui.economy_core.trader.equip.cant": "не покупается",
+  "gui.economy_core.trader.equip.hint": "Клик: продать или выкупить (↩)",
+  "gui.economy_core.trader.equip.no_money": "Не хватает средств для выкупа",
+
+  "gui.economy_core.trader.tab.inventory": "Инвентарь",
+  "gui.economy_core.trader.tab.equipment": "Снаряжение",
+
+  "gui.economy_core.trader.empty_sell": "Торговцу нечего у вас купить"
 }

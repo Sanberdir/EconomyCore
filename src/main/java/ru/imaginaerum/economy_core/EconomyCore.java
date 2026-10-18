@@ -18,6 +18,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
@@ -42,6 +43,7 @@ import ru.imaginaerum.economy_core.init.entities.renderer.EconomyTraderRenderer;
 import ru.imaginaerum.economy_core.init.items.EcoItems;
 import ru.imaginaerum.economy_core.init.tride.EconomyMenus;
 import ru.imaginaerum.economy_core.init.tride.TraderScreen;
+import top.theillusivec4.curios.api.CuriosApi;
 
 // The value here should match an entry in the META-INF/neoforge.mods.toml file
 @Mod(EconomyCore.MODID)
@@ -61,7 +63,6 @@ public class EconomyCore {
         NeoForge.EVENT_BUS.register(this);
         EcoItems.ITEMS.register(modEventBus);
         EcoBlocks.BLOCKS.register(modEventBus);
-
         EconomyAttachments.ATTACHMENTS.register(modEventBus);
         // Register our mod's ModConfigSpec so that FML can create and load the config file for us
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);

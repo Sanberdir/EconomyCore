@@ -37,7 +37,25 @@ public class TraderMenu extends AbstractContainerMenu {
         this.offers = trader.getOffers();
 
     }
+    /** Проданное во вкладке «Снаряжение» уходит в обычный выкуп торговца. */
+    public void commitSold(ServerPlayer player, List<ItemStack> stacks) {
+        if (trader == null || stacks.isEmpty()) return;
+        for (ItemStack s : stacks) {
+            trader.addBuyback(s.copyWithCount(1), s.getCount());
+        }
+        afterTrade(player);   // refreshNow + свежий список клиенту, как после обычной продажи
+    }
+    public boolean sellEquipped(ServerPlayer player, ItemStack stack, TraderPrices.Quote q) {
+        if (trader == null) return false;
+        int batches = stack.getCount() / q.count();
+        if (batches <= 0) return false;
 
+        EconomyBank.credit(player, q.currency(), batches * q.amount());
+        trader.spawnSellXp(batches * q.xp());
+
+        afterTrade(player);
+        return true;
+    }
     /** Клиентская сторона: список торгов приходит в буфере при открытии. */
     public TraderMenu(int id, Inventory inv, RegistryFriendlyByteBuf buf) {
         super(EconomyMenus.TRADER.get(), id);

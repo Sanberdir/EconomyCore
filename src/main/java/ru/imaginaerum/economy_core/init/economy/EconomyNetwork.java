@@ -58,5 +58,8 @@ public class EconomyNetwork {
             // Всегда отправляем свежий список, чтобы номера торгов у клиента совпали с сервером
             PacketDistributor.sendToPlayer(sp, new OpenSellEditorPayload(JsonVillagerTrades.rows()));
         });
+        r.playToServer(EquipActionPayload.TYPE, EquipActionPayload.CODEC, EquipTrade::handle);
+        r.playToClient(EquipListPayload.TYPE, EquipListPayload.CODEC,
+                (p, ctx) -> EquipClient.receive(p.lines()));
     }
 }

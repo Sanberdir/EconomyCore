@@ -77,5 +77,18 @@
   "gui.economy_core.sell.col.xp": "XP",
   "gui.economy_core.sell.hint": "Enter — save • click an item — replace",
   "gui.economy_core.buy.xp": "XP",
-  "gui.economy_core.buy.auto": "auto"
+  "gui.economy_core.buy.auto": "auto",
+
+  "gui.economy_core.trader.equip": "Equipped",
+  "gui.economy_core.trader.equip.title": "Equipped Gear",
+  "gui.economy_core.trader.equip.none": "Nothing equipped",
+  "gui.economy_core.trader.equip.cant": "Not buyable",
+  "gui.economy_core.trader.equip.hint": "Click: sell or buy back (↩)",
+  "gui.economy_core.trader.equip.no_money": "Not enough money to buy back",
+
+  "gui.economy_core.trader.tab.inventory": "Inventory",
+  "gui.economy_core.trader.tab.equipment": "Equipment",
+
+  "gui.economy_core.trader.empty_sell": "The trader has nothing to buy from you"
+
 }

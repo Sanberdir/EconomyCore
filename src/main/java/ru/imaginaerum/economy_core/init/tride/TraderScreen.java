@@ -4,7 +4,9 @@ import com.mojang.math.Axis;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
@@ -14,6 +16,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.trading.MerchantOffer;
+import net.neoforged.neoforge.network.PacketDistributor;
 import org.lwjgl.glfw.GLFW;
 import ru.imaginaerum.economy_core.init.economy.EconomyBank;
 import ru.imaginaerum.economy_core.init.items.EcoItems;
@@ -40,7 +43,18 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
     private static final int INV_LABEL_Y = LIST_Y + GRID_H + 6;
     private static final int INV_Y = INV_LABEL_Y + 12;
     private static final int HOTBAR_GAP = 0;
+    private int invScroll = 0;
 
+    private int sellRows() { return (sellList.size() + COLS - 1) / COLS; }
+    private int sellMaxScroll() { return Math.max(0, sellRows() - EQ_ROWS); }
+    // ---- вкладки: инвентарь / снаряжение ----
+    private static final int TAB_H = 12, TAB_INV_W = 80, TAB_EQ_W = 90;
+    private static final int EQ_ROWS = 2;   // 2 ряда по 36 px = 72 px, как инвентарь
+    private boolean equipTab = false;
+    private List<EquipLine> equipLines = List.of();
+    private int equipScroll = 0;
+    private int eqTotalRows() { return (equipLines.size() + COLS - 1) / COLS; }
+    private int eqMaxScroll() { return Math.max(0, eqTotalRows() - EQ_ROWS); }
     // ---- диалог ----
     private static final int DLG_W = 176;
     private static final int DLG_H = 110;
@@ -62,6 +76,7 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
     private boolean qtyFieldFocused = false;
     private String qtyFieldText = "";
     private static final int QTY_FIELD_MAX_LEN = 4;
+
     public TraderScreen(TraderMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
         this.imageWidth = 280;
@@ -157,11 +172,128 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
         return base + ((i - 9) / 9) * SLOT;
     }
 
-    private int invSlotAt(double mx, double my) {
-        for (int i = 0; i < 36; i++) {
-            if (hit(mx, my, invSlotX(i), invSlotY(i), SLOT, SLOT)) return i;
+    // =====================================================================
+    //  Вкладки
+    // =====================================================================
+
+    private int tabY() { return topPos + INV_LABEL_Y - 2; }
+    private int tabInvX() { return leftPos + LIST_X; }
+    private int tabEqX() { return leftPos + LIST_X + TAB_INV_W + 4; }
+    private int areaX() { return leftPos + LIST_X; }
+    private int areaY() { return topPos + INV_Y; }
+    private int areaW() { return imageWidth - 16; }
+
+    public void setEquipLines(List<EquipLine> l) {
+        equipLines = l;
+        equipScroll = Mth.clamp(equipScroll, 0, eqMaxScroll());
+    }
+
+    private static ItemStack itemOf(String id) {
+        ResourceLocation loc = ResourceLocation.tryParse(id);
+        Item item = loc == null ? Items.BARRIER : BuiltInRegistries.ITEM.getOptional(loc).orElse(Items.BARRIER);
+        return new ItemStack(item);
+    }
+
+    private void selectTab(boolean equip) {
+        if (equipTab == equip) return;
+        System.out.println("[EQ] selectTab equip=" + equip + " wasEquip=" + equipTab);
+        if (equipTab) {
+            PacketDistributor.sendToServer(EquipActionPayload.commit());   // ДО смены флага
         }
-        return -1;
+        equipTab = equip;
+        equipScroll = 0;
+        invScroll = 0;
+        equipLines = List.of();
+        if (equip) PacketDistributor.sendToServer(EquipActionPayload.list());
+        click();
+    }
+
+    private void renderTabs(GuiGraphics g, int mx, int my) {
+        int y = tabY();
+        drawTab(g, tabInvX(), y, TAB_INV_W, "gui.economy_core.trader.tab.inventory", !equipTab, mx, my);
+        drawTab(g, tabEqX(), y, TAB_EQ_W, "gui.economy_core.trader.tab.equipment", equipTab, mx, my);
+    }
+
+    private void drawTab(GuiGraphics g, int x, int y, int w, String key, boolean active, int mx, int my) {
+        boolean hov = hit(mx, my, x, y, w, TAB_H);
+        g.fill(x, y, x + w, y + TAB_H, active ? 0xFF55555A : hov ? 0xFF444448 : 0xFF333333);
+        g.renderOutline(x, y, w, TAB_H, active ? 0xFFFFFFFF : 0xFF777777);
+        g.drawCenteredString(font, font.plainSubstrByWidth(Component.translatable(key).getString(), w - 4),
+                x + w / 2, y + 2, active ? 0xFFFFFF : 0xAAAAAA);
+    }
+
+    /** Рисует список надетого и проданного. Возвращает предмет под курсором для подсказки. */
+    private ItemStack renderEquipList(GuiGraphics g, int mx, int my) {
+        int ax = areaX(), ay = areaY(), aw = areaW();
+        equipScroll = Mth.clamp(equipScroll, 0, eqMaxScroll());
+
+        if (equipLines.isEmpty()) {
+            g.drawCenteredString(font, Component.translatable("gui.economy_core.trader.equip.none"),
+                    ax + aw / 2, ay + 28, 0xAAAAAA);
+            return ItemStack.EMPTY;
+        }
+
+        ItemStack tip = ItemStack.EMPTY;
+        for (int r = 0; r < EQ_ROWS; r++) {
+            for (int c = 0; c < COLS; c++) {
+                int n = (equipScroll + r) * COLS + c;
+                if (n >= equipLines.size()) continue;
+                EquipLine l = equipLines.get(n);
+                int cx = ax + c * CELL_W, cy = ay + r * CELL_H;
+                boolean can = l.sold() || l.amount() > 0;
+                boolean hov = hit(mx, my, cx, cy, CELL_W, CELL_H);
+
+                int bg = l.sold() ? (hov ? 0xFF3F5A3F : 0xFF2F442F)
+                        : (hov && can ? 0xFF55555A : 0xFF333333);
+                g.fill(cx, cy, cx + CELL_W - 1, cy + CELL_H - 1, bg);
+                if (hov && can) g.renderOutline(cx, cy, CELL_W - 1, CELL_H - 1, 0xFFFFFFFF);
+
+                int ix = cx + (CELL_W - 1 - 16) / 2, iy = cy + 3;
+                g.renderItem(l.stack(), ix, iy);
+                g.renderItemDecorations(font, l.stack(), ix, iy);
+
+                int py = cy + 24;
+                if (can) {
+                    String t = String.valueOf(l.amount());
+                    float iconScale = 0.5f;
+                    int maxTextW = CELL_W - 1 - 2 - Math.round(16 * iconScale) - 1;
+                    float ts = fitScale(t, maxTextW);
+                    int w = costWidth(t, iconScale, ts);
+                    drawCost(g, itemOf(l.currency()), t, l.sold() ? 0xFFAA55 : 0x55FF55,
+                            cx + (CELL_W - 1 - w) / 2, py, iconScale, ts);
+                    if (l.sold()) g.drawString(font, "↩", cx + 2, cy + 2, 0xFFAA55);
+                } else {
+                    g.drawCenteredString(font, "✘", cx + (CELL_W - 1) / 2, py, 0x888888);
+                }
+                if (hov) tip = l.stack();
+            }
+        }
+
+        int max = eqMaxScroll();
+        if (max > 0) {
+            int barH = EQ_ROWS * CELL_H - 2;
+            int thumb = Math.max(10, barH * EQ_ROWS / eqTotalRows());
+            int ty = (barH - thumb) * equipScroll / max;
+            int bx = ax + GRID_W + 3;
+            g.fill(bx, ay, bx + 4, ay + barH, 0xFF333333);
+            g.fill(bx, ay + ty, bx + 4, ay + ty + thumb, 0xFFAAAAAA);
+        }
+        return tip;
+    }
+
+    /** true — клик пришёлся на список и обработан. */
+    private boolean equipClick(double mx, double my) {
+        int ax = areaX(), ay = areaY();
+        if (!hit(mx, my, ax, ay, GRID_W, EQ_ROWS * CELL_H)) return false;
+        int n = (equipScroll + (int) ((my - ay) / CELL_H)) * COLS + (int) ((mx - ax) / CELL_W);
+        if (n < 0 || n >= equipLines.size()) return true;
+
+        EquipLine l = equipLines.get(n);
+        if (l.sold()) PacketDistributor.sendToServer(EquipActionPayload.buyback(l.id()));
+        else if (l.amount() > 0) PacketDistributor.sendToServer(EquipActionPayload.sell(l.key()));
+        else return true;
+        click();
+        return true;
     }
 
     // =====================================================================
@@ -182,9 +314,7 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
         g.renderOutline(x, y, imageWidth, imageHeight, 0xFF8B8B8B);
         g.drawString(font, title, x + 8, y + 5, 0xFFFFFF);
 
-        // Валюта игрока
-
-// Валюта игрока: одна строка в шапке, выравнивание по правому краю
+        // Валюта игрока: одна строка в шапке, выравнивание по правому краю
         int rightEdge = x + imageWidth - 8;
         rightEdge = drawBalance(g, EMERALD,
                 String.valueOf(EconomyBank.total(minecraft.player, Items.EMERALD)), rightEdge, y + 3);
@@ -225,16 +355,16 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
             g.fill(bx, y + LIST_Y + thumbY, bx + 4, y + LIST_Y + thumbY + thumbH, 0xFFAAAAAA);
         }
 
-        // Инвентарь
-        g.drawString(font, Component.translatable("gui.economy_core.trader.inventory"),
-                x + LIST_X, y + INV_LABEL_Y, 0xAAAAAA);
+        // Вкладки вместо надписи «Ваш инвентарь»
+        renderTabs(g, hx, hy);
 
         int hoveredInv = -1;
-        for (int i = 0; i < 36; i++) {
-            int sx = invSlotX(i), sy = invSlotY(i);
-            boolean hov = hit(hx, hy, sx, sy, SLOT, SLOT);
-            if (hov) hoveredInv = i;
-            renderInvSlot(g, i, sx, sy, hov);
+        TraderPrices.SellLine hoveredSell = null;
+        ItemStack equipTip = ItemStack.EMPTY;
+        if (equipTab) {
+            equipTip = renderEquipList(g, hx, hy);
+        } else {
+            hoveredSell = renderSellGrid(g, hx, hy);
         }
 
         g.drawString(font,
@@ -244,19 +374,16 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
 
         if (dialog) {
             renderDialog(g, mx, my);
+        } else if (!equipTip.isEmpty()) {
+            g.renderTooltip(font, equipTip, mx, my);
         } else if (hoveredLot >= 0) {
             Lot l = buyLot(hoveredLot);
             if (l != null) renderLotTooltip(g, l, mx, my);
-        } else if (hoveredInv >= 0) {
-            ItemStack s = minecraft.player.getInventory().items.get(hoveredInv);
-            TraderPrices.SellLine line = sellLineFor(s);
-            if (line != null) {
-                renderLotTooltip(g, sellLot(line), mx, my);
-            } else if (!s.isEmpty()) {
-                g.renderTooltip(font, s, mx, my);
-            }
+        } else if (hoveredSell != null) {
+            renderLotTooltip(g, sellLot(hoveredSell), mx, my);
         }
     }
+
     private int drawBalance(GuiGraphics g, ItemStack icon, String text, int right, int y) {
         int textX = right - font.width(text);
         int iconX = textX - 18;
@@ -264,6 +391,7 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
         g.drawString(font, text, textX, y + 4, 0xFFFFFF, true);
         return iconX;
     }
+
     private void renderCell(GuiGraphics g, int idx, int cx, int cy, boolean hovered) {
         Lot l = buyLot(idx);
         if (l == null) return;
@@ -302,16 +430,57 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
         return Math.max(0.4f, (float) Math.floor(maxW * 20f / w) / 20f);
     }
 
-    private void renderInvSlot(GuiGraphics g, int i, int sx, int sy, boolean hovered) {
-        ItemStack s = minecraft.player.getInventory().items.get(i);
-        boolean sellable = sellLineFor(s) != null;
+    /** Сетка продаваемого из инвентаря. Возвращает строку под курсором. */
+    @Nullable
+    private TraderPrices.SellLine renderSellGrid(GuiGraphics g, int mx, int my) {
+        int ax = areaX(), ay = areaY(), aw = areaW();
+        invScroll = Mth.clamp(invScroll, 0, sellMaxScroll());
 
-        g.fill(sx, sy, sx + SLOT - 1, sy + SLOT - 1, hovered && sellable ? 0xFF55555A : 0xFF333333);
-        if (hovered) g.renderOutline(sx, sy, SLOT - 1, SLOT - 1, sellable ? 0xFFFFFFFF : 0xFF777777);
-        if (s.isEmpty()) return;
+        if (sellList.isEmpty()) {
+            g.drawCenteredString(font, Component.translatable("gui.economy_core.trader.empty_sell"),
+                    ax + aw / 2, ay + 28, 0xAAAAAA);
+            return null;
+        }
 
-        g.renderItem(s, sx + 1, sy + 1);
-        g.renderItemDecorations(font, s, sx + 1, sy + 1);
+        TraderPrices.SellLine hovered = null;
+        for (int r = 0; r < EQ_ROWS; r++) {
+            for (int c = 0; c < COLS; c++) {
+                int n = (invScroll + r) * COLS + c;
+                if (n >= sellList.size()) continue;
+                TraderPrices.SellLine e = sellList.get(n);
+                int cx = ax + c * CELL_W, cy = ay + r * CELL_H;
+                boolean hov = hit(mx, my, cx, cy, CELL_W, CELL_H);
+                if (hov) hovered = e;
+
+                g.fill(cx, cy, cx + CELL_W - 1, cy + CELL_H - 1, hov ? 0xFF55555A : 0xFF333333);
+                if (hov) g.renderOutline(cx, cy, CELL_W - 1, CELL_H - 1, 0xFFFFFFFF);
+
+                int ix = cx + (CELL_W - 1 - 16) / 2, iy = cy + 3;
+                g.renderItem(e.stack(), ix, iy);
+                g.renderItemDecorations(font, e.stack(), ix, iy,
+                        e.have() > 1 ? bigNum(e.have()) : null);
+
+                var q = e.quote();
+                String t = String.valueOf(q.amount());
+                float iconScale = 0.5f;
+                int maxTextW = CELL_W - 1 - 2 - Math.round(16 * iconScale) - 1;
+                float ts = fitScale(t, maxTextW);
+                int w = costWidth(t, iconScale, ts);
+                drawCost(g, new ItemStack(q.currency()), t, 0x55FF55,
+                        cx + (CELL_W - 1 - w) / 2, cy + 24, iconScale, ts);
+            }
+        }
+
+        int max = sellMaxScroll();
+        if (max > 0) {
+            int barH = EQ_ROWS * CELL_H - 2;
+            int thumb = Math.max(10, barH * EQ_ROWS / sellRows());
+            int ty = (barH - thumb) * invScroll / max;
+            int bx = ax + GRID_W + 3;
+            g.fill(bx, ay, bx + 4, ay + barH, 0xFF333333);
+            g.fill(bx, ay + ty, bx + 4, ay + ty + thumb, 0xFFAAAAAA);
+        }
+        return hovered;
     }
 
     // ---------- Подсказка ----------
@@ -470,7 +639,7 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
         boolean fieldHover = hit(mx, my, fieldX, fieldY, fieldW, fieldH);
         g.fill(fieldX, fieldY, fieldX + fieldW, fieldY + fieldH, 0xFF161616);
         g.renderOutline(fieldX, fieldY, fieldW, fieldH,
-                qtyFieldFocused ? 0xFFFFFF : (fieldHover ? 0xFFAAAAAA : 0xFF555555));
+                qtyFieldFocused ? 0xFFFFFFFF : (fieldHover ? 0xFFAAAAAA : 0xFF555555));
 
         String shown = qtyFieldFocused ? qtyFieldText : String.valueOf(qty);
         if (qtyFieldFocused && (System.currentTimeMillis() / 500L) % 2 == 0) {
@@ -577,6 +746,10 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
             return true;
         }
         if (button == 0) {
+            if (hit(mx, my, tabInvX(), tabY(), TAB_INV_W, TAB_H)) { selectTab(false); return true; }
+            if (hit(mx, my, tabEqX(), tabY(), TAB_EQ_W, TAB_H)) { selectTab(true); return true; }
+            if (equipTab && equipClick(mx, my)) return true;
+
             int idx = cellAt(mx, my);
             if (idx >= 0) {
                 Lot l = buyLot(idx);
@@ -585,18 +758,23 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
                 }
                 return true;
             }
-            int inv = invSlotAt(mx, my);
-            if (inv >= 0) {
-                TraderPrices.SellLine line = sellLineFor(minecraft.player.getInventory().items.get(inv));
-                if (line != null) {
-                    openDialog(line.slot(), true);
+            if (!equipTab) {
+                int n = sellCellAt(mx, my);
+                if (n >= 0) {
+                    openDialog(sellList.get(n).slot(), true);
+                    return true;
                 }
-                return true;
+                if (hit(mx, my, areaX(), areaY(), GRID_W, EQ_ROWS * CELL_H)) return true;
             }
         }
         return super.mouseClicked(mx, my, button);
     }
-
+    private int sellCellAt(double mx, double my) {
+        int ax = areaX(), ay = areaY();
+        if (!hit(mx, my, ax, ay, GRID_W, EQ_ROWS * CELL_H)) return -1;
+        int n = (invScroll + (int) ((my - ay) / CELL_H)) * COLS + (int) ((mx - ax) / CELL_W);
+        return n >= 0 && n < sellList.size() ? n : -1;
+    }
     private void openDialog(int key, boolean sell) {
         dialogKey = key;
         dialogSell = sell;
@@ -642,6 +820,7 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
             closeDialog();
         }
     }
+
     private void commitQtyField(int maxQ) {
         qtyFieldFocused = false;
         try {
@@ -652,6 +831,7 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
         }
         qtyFieldText = String.valueOf(qty);
     }
+
     private void confirm() {
         Lot l = dialogLot();
         if (l == null || l.maxQty() < 1) { dialogKey = -1; return; }
@@ -701,8 +881,7 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
                     qtyFieldText = "";
                     return true;
                 }
-                // ВАЖНО: цифры здесь больше НЕ обрабатываем — этим занимается charTyped.
-                // Всё остальное тоже глушим, чтобы не улетало в super.
+                // Цифры обрабатывает charTyped, остальное глушим, чтобы не улетало в super.
                 return true;
             }
 
@@ -724,6 +903,7 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
         }
         return super.charTyped(c, mods);
     }
+
     @Override
     public boolean mouseScrolled(double mx, double my, double scrollX, double scrollY) {
         if (dialogKey >= 0) {
@@ -732,6 +912,10 @@ public class TraderScreen extends AbstractContainerScreen<TraderMenu> {
             int maxQ = l == null ? 1 : Math.max(1, l.maxQty());
             int step = hasShiftDown() ? 10 : 1;
             qty = Mth.clamp(qty + (int) Math.signum(scrollY) * step, 1, maxQ);
+            return true;
+        }
+        if (!equipTab && hit(mx, my, areaX(), areaY(), GRID_W + 8, EQ_ROWS * CELL_H)) {
+            invScroll = Mth.clamp(invScroll - (int) Math.signum(scrollY), 0, sellMaxScroll());
             return true;
         }
         scroll = Mth.clamp(scroll - (int) Math.signum(scrollY), 0, maxScroll());
