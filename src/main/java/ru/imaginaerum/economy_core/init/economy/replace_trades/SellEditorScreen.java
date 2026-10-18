@@ -7,6 +7,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -21,14 +22,23 @@ public class SellEditorScreen extends Screen {
 
     private static final int ROW_H = 24;
     private static final int TOP = 70;
-
+    private static final int PER_PAGE = 5;
+    private int page = 0;
     /** Поля одной строки торга текущего уровня. */
     private final class Editor {
         TradeRow row;
         EditBox resCount, priceCount, uses, xp;
         Editor(TradeRow row) { this.row = row; }
     }
+    private List<TradeRow> levelRows() {
+        return rows.stream()
+                .filter(r -> r.profession().equals(profession) && r.level() == level)
+                .toList();
+    }
 
+    private static int pages(int n) {
+        return Math.max(1, (n + PER_PAGE - 1) / PER_PAGE);
+    }
     private final List<TradeRow> rows;
     @Nullable
     private String profession;
@@ -42,9 +52,15 @@ public class SellEditorScreen extends Screen {
     }
 
     /** Ответ сервера после добавления, удаления или сброса. */
+    /** Ответ сервера после добавления, удаления или сброса. */
     public void updateRows(List<TradeRow> fresh) {
+        int before = profession == null ? 0 : levelRows().size();
         rows.clear();
         rows.addAll(fresh);
+        if (profession != null) {
+            int n = levelRows().size();
+            if (n > before) page = pages(n) - 1;   // добавили торг: показать его страницу
+        }
         resetArmed = false;
         rebuildWidgets();
     }
@@ -71,6 +87,7 @@ public class SellEditorScreen extends Screen {
             addRenderableWidget(Button.builder(profName(p), b -> {
                         profession = p;
                         level = 1;
+                        page = 0;
                         resetArmed = false;
                         rebuildWidgets();
                     })
@@ -93,6 +110,7 @@ public class SellEditorScreen extends Screen {
         addRenderableWidget(Button.builder(Component.literal("←"), b -> {
             commitAll();
             profession = null;
+            page = 0;
             resetArmed = false;
             rebuildWidgets();
         }).bounds(8, 8, 24, 20).build());
@@ -118,6 +136,7 @@ public class SellEditorScreen extends Screen {
             Button tab = Button.builder(Component.literal(String.valueOf(l)), b -> {
                         commitAll();
                         level = lv;
+                        page = 0;
                         resetArmed = false;
                         rebuildWidgets();
                     })
@@ -127,9 +146,14 @@ public class SellEditorScreen extends Screen {
         }
 
         int x0 = width / 2 - 130;
+
+        List<TradeRow> all = levelRows();
+        int pages = pages(all.size());
+        page = Mth.clamp(page, 0, pages - 1);
+
         int y = TOP;
-        for (TradeRow r : rows) {
-            if (!r.profession().equals(profession) || r.level() != level) continue;
+        for (int n = page * PER_PAGE; n < Math.min(all.size(), (page + 1) * PER_PAGE); n++) {
+            TradeRow r = all.get(n);
 
             Editor e = new Editor(r);
             e.resCount = numBox(x0 + 22, y, 44, 7, r.resultCount(), r.resultEditable());
@@ -148,11 +172,39 @@ public class SellEditorScreen extends Screen {
             y += ROW_H;
         }
 
-        if (editors.size() < TradeRow.MAX_PER_LEVEL) {
+        // Нижняя часть стоит на фиксированных местах (под 5 строками)
+        int fy = TOP + PER_PAGE * ROW_H + 6;
+
+        Button prev = Button.builder(Component.literal("<"), b -> changePage(-1))
+                .bounds(width / 2 - 70, fy, 20, 18).build();
+        Button next = Button.builder(Component.literal(">"), b -> changePage(1))
+                .bounds(width / 2 + 50, fy, 20, 18).build();
+        prev.active = page > 0;
+        next.active = page < pages - 1;
+        addRenderableWidget(prev);
+        addRenderableWidget(next);
+
+        if (all.size() < TradeRow.MAX_PER_LEVEL) {
             addRenderableWidget(Button.builder(Component.translatable("gui.economy_core.sell.add"),
                             b -> minecraft.setScreen(new AddTradeScreen(this, profession, level)))
-                    .bounds(width / 2 - 70, y + 4, 140, 20).build());
+                    .bounds(width / 2 - 70, fy + 24, 140, 20).build());
         }
+    }
+    @Override
+    public boolean mouseScrolled(double mx, double my, double sx, double sy) {
+        if (profession == null) return super.mouseScrolled(mx, my, sx, sy);
+        int np = Mth.clamp(page - (int) Math.signum(sy), 0, pages(levelRows().size()) - 1);
+        if (np != page) {
+            commitAll();
+            page = np;
+            rebuildWidgets();
+        }
+        return true;
+    }
+    private void changePage(int d) {
+        commitAll();
+        page += d;
+        rebuildWidgets();
     }
 
     // ---------- Сохранение ----------
@@ -312,7 +364,9 @@ public class SellEditorScreen extends Screen {
 
             y += ROW_H;
         }
-
+        int fy = TOP + PER_PAGE * ROW_H + 6;
+        g.drawCenteredString(font, (page + 1) + " / " + pages(levelRows().size()),
+                width / 2, fy + 5, 0xFFFFFF);
         g.drawCenteredString(font, Component.translatable("gui.economy_core.sell.hint"),
                 width / 2, height - 16, 0x888888);
 

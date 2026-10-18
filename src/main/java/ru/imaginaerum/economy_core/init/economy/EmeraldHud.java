@@ -17,12 +17,28 @@ public class EmeraldHud {
 
     private static final ItemStack EMERALD = new ItemStack(Items.EMERALD);
 
-    private static void drawLine(GuiGraphics g, Minecraft mc, ItemStack icon, int value, int color, int fromBottom) {
+    /** Ширина под число. Значок стоит на фиксированном месте, число не двигает его. */
+    private static final int TEXT_W = 48;
+    private static final int MARGIN = 6;
+    private static final float MIN_SCALE = 0.4f;
+
+    private static void drawLine(GuiGraphics g, Minecraft mc, ItemStack icon, long value, int color, int fromBottom) {
         String text = String.valueOf(value);
-        int x = g.guiWidth() - 6 - mc.font.width(text) - 18;
+
+        int iconX = g.guiWidth() - MARGIN - TEXT_W - 18;   // не зависит от числа
         int y = g.guiHeight() - fromBottom;
-        g.renderItem(icon, x, y);
-        g.drawString(mc.font, text, x + 18, y + 4, color, true);
+        g.renderItem(icon, iconX, y);
+
+        // чем длиннее число, тем мельче шрифт
+        int w = mc.font.width(text);
+        float scale = w <= TEXT_W ? 1f : Math.max(MIN_SCALE, (float) TEXT_W / w);
+
+        var pose = g.pose();
+        pose.pushPose();
+        pose.translate(iconX + 18, y + (16 - 8 * scale) / 2f + 0.5f, 0);
+        pose.scale(scale, scale, 1f);
+        g.drawString(mc.font, text, 0, 0, color, true);
+        pose.popPose();
     }
 
     @SubscribeEvent
